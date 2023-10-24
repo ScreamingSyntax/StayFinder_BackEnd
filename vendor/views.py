@@ -1,14 +1,11 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from .models import VendorUser
-from .serializer import VendorSerializer
-from django.shortcuts import get_object_or_404
-from django.contrib.auth.models import User
+from .models import VendorUser,VendorProfile
+from .serializer import VendorSerializer,VendorProfileSerializer
 from django.contrib.auth.hashers import make_password
 from user.email import generate_otp,send_otp_email
 from django.db import models
@@ -143,13 +140,10 @@ class SignUpView(APIView):
                     "message":list(serializer.errors.values())[0][0]
                 }
                 ,status=status.HTTP_400_BAD_REQUEST)
-        # except Exception:
-        #     print("niga")
-
+    
 class GetVendorData(APIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
-
     def get(self, request):
         if request.user.is_authenticated:
             print("Authenticated")
@@ -160,7 +154,6 @@ class GetVendorData(APIView):
                     "email":f"{request.user.email}",
                     "fullName":f"{request.user.full_name}",
                     "phoneNumber":f"{request.user.phone_number}",
-                    "isVerified":VendorUser.objects.get(email=request.user.email).is_verified
                 }
             })            
         else:
@@ -169,3 +162,42 @@ class GetVendorData(APIView):
                 "detail": "Invalid Token"
             })
 
+class VendorVerificationData(APIView):
+    authentication_classes = [SessionAuthentication,TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def get(self,request):
+        if request.user.is_authenticated:
+            print(request.user.email)
+            email = request.user.email
+            profile = VendorProfile.objects.get(vendor = VendorUser.objects.get(email=email))
+            print(profile)
+            return Response({
+                "success":1,
+                "data":{
+                    "id":request.user.id,
+                    "date_joined":VendorUser.objects.get(email=email).date_joined,
+                    "profile_picture":f'/images/{profile.profile_picture}',
+                    "citizenship_back":f'/images/{profile.citizenship_back}',
+                    "citizenship_front":f'/images/{profile.citizenship_front}',
+                    "digital_signature":f'/images/{profile.digital_signature}',
+                    "rejected_message":f'{profile.rejected_message}',
+                    "address":f'{profile.address}',
+                    "is_rejected":f'{profile.is_rejected}',
+                    "is_verified":f'{profile.is_verified}',
+                    "is_under_verification_process":f'{profile.is_under_verification_process}'
+                }
+            })
+    def patch(self,request):
+        if request.user.is_authenticated:
+            vendor_user = VendorUser.objects.get(email = request.user.email)
+            serializer = VendorProfileSerializer(instance=vendor_user.vendor_profile,data=request.data,partial=True)
+            if(serializer.is_valid()):
+                serializer.save()
+                return Response({
+                    "success":1,
+                    "message":"Successfully Send for Verification :)"
+                })
+            return Response({
+                "success":0,
+                "message":"Something wen't wrong"
+            })

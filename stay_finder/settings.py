@@ -1,6 +1,6 @@
 from decouple import config
 from pathlib import Path
-
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -12,7 +12,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.1.84']
+ALLOWED_HOSTS = ['192.168.1.84','192.168.114.193']
 
 
 # Application definition
@@ -134,3 +134,7 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS')
 
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')  
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')  
+
+
+MEDIA_ROOT = os.path.join(BASE_DIR,'assets/images/')
+MEDIA_URL='/images/'
