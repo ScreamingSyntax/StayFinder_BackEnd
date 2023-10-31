@@ -1,6 +1,5 @@
 from django.db import models
 from user.models import BaseUser
-
 # class VendorUser(AbstractUser):
 #     username=None
 #     full_name = models.CharField(max_length=100)
@@ -24,7 +23,6 @@ from user.models import BaseUser
 class VendorUser(BaseUser):
     date_joined = models.DateTimeField(auto_now=True)
     date_verified = models.DateTimeField(null=True)
-
     def __str__(self):
         return self.email
 class VendorProfile(models.Model):

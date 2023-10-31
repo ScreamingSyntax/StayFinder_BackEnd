@@ -8,7 +8,11 @@ from .models import VendorUser,VendorProfile
 from .serializer import VendorSerializer,VendorProfileSerializer
 from django.contrib.auth.hashers import make_password
 from user.email import generate_otp,send_otp_email
+from django.utils import timezone
 from django.db import models
+from tier.models import CurrentTier,Tier
+from dateutil.relativedelta import relativedelta 
+from payment.models import Payment
 
 class LoginView(APIView):
     def post(self, request):
@@ -162,6 +166,73 @@ class GetVendorData(APIView):
                 "detail": "Invalid Token"
             })
 
+class VendorAcceptData(APIView):
+    authentication_classes = [SessionAuthentication,TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def post(self,request):
+        if (request.user.is_authenticated):
+            vendor_user = VendorUser.objects.get(email = request.user.email)
+            if(vendor_user.vendor_profile.is_verified):
+                return Response({
+                    "success":0,
+                    "message":"The vendor is already verified"
+                })
+            vendor_user.vendor_profile.is_verified = True
+            vendor_user.vendor_profile.is_rejected = False
+            vendor_user.date_verified = timezone.now()
+            vendor_user.vendor_profile.rejected_message = None
+            vendor_user.vendor_profile.is_under_verification_process = False
+            vendor_user.save()
+            print(timezone.now())
+            tier  = CurrentTier(tier=Tier.objects.filter(name="Free Tier").first(),vendor =vendor_user,paid_amount=0,paid_date = timezone.now(),paid_till=timezone.now()+relativedelta(months=1),is_active=True);
+            tier.save()
+            payment = Payment.objects.create(tier_id =Tier.objects.filter(name = "Free Tier").first(),vendor = vendor_user,paid_amount = 0, method_of_payment = 'None',paid_date = timezone.now(),paid_till = timezone.now()+relativedelta(months=1))
+            payment.save()
+            return Response({
+                    "success":1,
+                    "message":"The vendor is successfully verified"
+                })
+        return Response({
+                "success":0,
+                "message":"Something wen't wrong"
+        })
+
+class VendorRejectData(APIView):
+    authentication_classes = [SessionAuthentication,TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def post(self,request):
+        if (request.user.is_authenticated):
+            if('rejected_message' in request.data):
+                vendor_user = VendorUser.objects.get(email = request.user.email)
+                if(vendor_user.vendor_profile.is_rejected):
+                    return Response({
+                        "success":0,
+                        "message":"The vendor is already rejected"
+                    })
+                if(vendor_user.vendor_profile.is_verified):
+                     return Response({
+                        "success":0,
+                        "message":"Cannot reject a verified vendor"
+                    })
+                vendor_user.vendor_profile.is_rejected = True
+                rejected = list(request.data.keys())[0]
+                vendor_user.vendor_profile.rejected_message=request.data[rejected]
+                vendor_user.vendor_profile.is_under_verification_process = False
+                vendor_user.save()
+                return Response({
+                        "success":1,
+                        "message":"The vendor is successfully rejected"
+                    })
+            else:
+                return Response({
+                    "success":0,
+                    "message":"Please provide a rejected message as well"
+                })
+        return Response({
+                "success":0,
+                "message":"Something wen't wrong"
+        })
+    
 class VendorVerificationData(APIView):
     authentication_classes = [SessionAuthentication,TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -192,6 +263,14 @@ class VendorVerificationData(APIView):
             vendor_user = VendorUser.objects.get(email = request.user.email)
             serializer = VendorProfileSerializer(instance=vendor_user.vendor_profile,data=request.data,partial=True)
             if(serializer.is_valid()):
+                if(vendor_user.vendor_profile.is_under_verification_process):
+                    return Response ({
+                        "success":0,
+                        "message":"Your credentials are already for verification"
+                    })
+                if(vendor_user.vendor_profile.is_rejected):
+                    vendor_user.vendor_profile.is_rejected = False
+                    vendor_user.vendor_profile.rejected_message = None
                 serializer.save()
                 return Response({
                     "success":1,
@@ -201,3 +280,5 @@ class VendorVerificationData(APIView):
                 "success":0,
                 "message":"Something wen't wrong"
             })
+    
+    # def post(self,request

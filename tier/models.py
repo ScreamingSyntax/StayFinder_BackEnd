@@ -15,6 +15,7 @@ class CurrentTier(models.Model):
     vendor = models.ForeignKey(VendorUser,on_delete=models.CASCADE,related_name='vendor_tier')
     paid_amount = models.CharField(null=False)
     paid_date = models.DateTimeField()
+    paid_till = models.DateTimeField()
     is_active = models.BooleanField()
     
     def __str__(self):
