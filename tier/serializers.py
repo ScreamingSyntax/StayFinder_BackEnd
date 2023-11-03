@@ -6,7 +6,13 @@ class TierSerializer(serializers.ModelSerializer):
         model = Tier
         fields = "__all__"
 
-class CurrentTierSerailzer(serializers.ModelSerializer):
+class TransactionTierSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CurrentTier
+        model = TierTransaction
         fields="__all__"
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TierTransaction
+        fields = ('tier','paid_amount','paid_date')
+    

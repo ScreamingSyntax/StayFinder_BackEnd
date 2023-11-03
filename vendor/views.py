@@ -10,9 +10,8 @@ from django.contrib.auth.hashers import make_password
 from user.email import generate_otp,send_otp_email
 from django.utils import timezone
 from django.db import models
-from tier.models import CurrentTier,Tier
+from tier.models import TierTransaction,Tier
 from dateutil.relativedelta import relativedelta 
-from payment.models import Payment
 
 class LoginView(APIView):
     def post(self, request):
@@ -184,10 +183,8 @@ class VendorAcceptData(APIView):
             vendor_user.vendor_profile.is_under_verification_process = False
             vendor_user.save()
             print(timezone.now())
-            tier  = CurrentTier(tier=Tier.objects.filter(name="Free Tier").first(),vendor =vendor_user,paid_amount=0,paid_date = timezone.now(),paid_till=timezone.now()+relativedelta(months=1),is_active=True);
+            tier  = TierTransaction(tier=Tier.objects.filter(name="Free Tier").first(),vendor =vendor_user,paid_amount=0,paid_date = timezone.now(),paid_till=timezone.now()+relativedelta(months=1),is_active=True,transaction_id="Free",method_of_payment='Free');
             tier.save()
-            payment = Payment.objects.create(tier_id =Tier.objects.filter(name = "Free Tier").first(),vendor = vendor_user,paid_amount = 0, method_of_payment = 'None',paid_date = timezone.now(),paid_till = timezone.now()+relativedelta(months=1))
-            payment.save()
             return Response({
                     "success":1,
                     "message":"The vendor is successfully verified"

@@ -9,6 +9,7 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = ['192.168.1.84','192.168.114.193',
+                 '192.168.42.193',
                  '192.168.1.90']
 
 
@@ -28,7 +29,7 @@ INSTALLED_APPS = [
     'tier',
     'user',
     'vendor',
-    'payment'
+    # 'payment'
 ]
 
 MIDDLEWARE = [

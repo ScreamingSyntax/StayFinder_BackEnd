@@ -4,5 +4,7 @@ from tier.views import *
 urlpatterns = [
     path('',GetTierInformation.as_view()),
     path('currentTier/',GetCurrenTierInformation.as_view()),
+    path('transactionHistory/',TransactionHistory.as_view()),
+    path('renewTier/',RenewTier.as_view()),
 
 ]
