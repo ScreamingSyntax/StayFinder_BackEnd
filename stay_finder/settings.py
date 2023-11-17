@@ -8,7 +8,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.1.84','192.168.114.193',
+ALLOWED_HOSTS = ['192.168.11.193','192.168.247.193',
                  '192.168.42.193',
                  '192.168.1.90']
 

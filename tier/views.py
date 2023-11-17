@@ -12,7 +12,8 @@ class GetTierInformation(APIView):
     authentication_classes = [SessionAuthentication,TokenAuthentication]
     permission_classes = [IsAuthenticated]
     def get(self,request):
-        tiers = Tier.objects.all()
+        tiers = list(Tier.objects.all())
+        tiers.sort(key= lambda x: x.pk)
         serializer = TierSerializer(tiers,many=True)
         if request.user.is_authenticated:
             return Response({
@@ -61,7 +62,6 @@ class RenewTier(APIView):
                         "success":0,
                         "message":f"Please provide {data} field"
                     })
-            # if(request)
             try:
                 serializer = TransactionTierSerializer(data=request.data)
                 if(serializer.is_valid()):

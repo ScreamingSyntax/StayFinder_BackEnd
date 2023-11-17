@@ -8,7 +8,7 @@ class Accommodation(models.Model):
     )  
     vendor = models.ForeignKey(VendorUser,on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
-    image = models.ImageField(upload_to='images/accommodation_images/',null=True)
+    image = models.ImageField(upload_to='accommodation_images/',null=True)
     city = models.CharField(max_length=50)
     address = models.CharField(max_length=50)
     longitude= models.CharField(max_length=100)
@@ -25,20 +25,27 @@ class Accommodation(models.Model):
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(null=True)
     is_pending = models.BooleanField(default=True)
+    meals_per_day = models.IntegerField(null=True)
+    weekly_non_veg_meals = models.IntegerField(null=True)
+    weekly_laundry_cycles = models.IntegerField(null=True)  
+    admission_rate = models.IntegerField(null=True)
+    
+    def __str__(self):
+        return f"{self.pk} {self.name} {self.vendor.full_name} {self.type}"
+
 class HotelTiers(models.Model):
-    accomodation = models.ForeignKey(Accommodation,on_delete=models.CASCADE)
+    accommodation = models.ForeignKey(Accommodation,on_delete=models.CASCADE)
     tier_name = models.CharField(max_length=20)
     description = models.TextField()
-
+    image = models.ImageField()
+    
 class Room(models.Model):
     accommodation = models.ForeignKey(Accommodation,on_delete=models.CASCADE)
     WASHROOM_STATUS = (
         ('exce','Excellent'),
         ('avg','Average'),
         ('adj','Adjustable')
-
     )
-    #For tier based
     seater_beds = models.IntegerField(null=True)
     hotel_tier = models.ForeignKey(HotelTiers,null=True,on_delete=models.CASCADE)
     ac_availability = models.BooleanField(null=True)
@@ -49,13 +56,22 @@ class Room(models.Model):
     bed_availability = models.BooleanField(null=True)
     sofa_availability = models.BooleanField(null=True)
     monthly_rate = models.IntegerField(null=True)
-    admission_rate = models.IntegerField(null=True)
     mat_availability = models.BooleanField(null=True)
     carpet_availability = models.BooleanField(null=True)
-    washroom_status = models.CharField(max_length=20,choices=WASHROOM_STATUS)
+    washroom_status = models.CharField(max_length=20,choices=WASHROOM_STATUS,null=True)
     dustbin_availability = models.BooleanField(null=True)
-
+    kettle_availability = models.BooleanField(null=True)
+    coffee_powder_availability  = models.BooleanField(null=True)
+    milk_powder_availability  = models.BooleanField(null=True)
+    tea_powder_availability  = models.BooleanField(null=True)
+    hair_dryer_availability = models.BooleanField(null=True)
+    tv_availability = models.BooleanField(null=True)
+     
+    def __str__(self):
+        return f"{self.pk} {self.accommodation.name} {self.accommodation.vendor.full_name}"
 class RoomImages(models.Model):
     room = models.ForeignKey(Room,on_delete=models.CASCADE)
-    images = models.ImageField(upload_to='images/room_images/')
-    
+    images = models.ImageField(upload_to='room_images/')
+
+    def __str__(self):
+        return f" {self.pk}  {self.room.accommodation.name} {self.room.accommodation.vendor.full_name}"
