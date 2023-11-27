@@ -42,9 +42,9 @@ class HotelTiers(models.Model):
 class Room(models.Model):
     accommodation = models.ForeignKey(Accommodation,on_delete=models.CASCADE)
     WASHROOM_STATUS = (
-        ('exce','Excellent'),
-        ('avg','Average'),
-        ('adj','Adjustable')
+        ('Excellent','excellent'),
+        ('Average','average'),
+        ('Adjustable','adjustable')
     )
     seater_beds = models.IntegerField(null=True)
     hotel_tier = models.ForeignKey(HotelTiers,null=True,on_delete=models.CASCADE)
@@ -69,6 +69,7 @@ class Room(models.Model):
      
     def __str__(self):
         return f"{self.pk} {self.accommodation.name} {self.accommodation.vendor.full_name}"
+    
 class RoomImages(models.Model):
     room = models.ForeignKey(Room,on_delete=models.CASCADE)
     images = models.ImageField(upload_to='room_images/')

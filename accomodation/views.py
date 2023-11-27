@@ -201,7 +201,8 @@ class RentalRoom(APIView):
                      "trash_dispose_availability": request.data.get('accommodation[trash_dispose_availability]'),
                      "parking_availability": request.data.get('accommodation[parking_availability]'),
                      "monthly_rate": request.data.get('accommodation[monthly_rate]'),
-                     "image":request.data.get('accommodation[image]')
+                     "image":request.data.get('accommodation[image]'),
+                    #  "description":request.data.get('accommodation[description]')
                  },
                  "room": {
                      "fan_availability": request.data.get('room[fan_availability]'),
@@ -686,7 +687,7 @@ class HostelAccommodation(APIView):
                     room_data = [RoomImages(room=row['room'],images=row['images']['image']) for row in map]
                     RoomImages.objects.bulk_create(room_data)
                     return Response({
-                        "success":0,
+                        "success":1,
                         "message":"Successfully added hostel"
                     })
                 return Response({
@@ -1089,8 +1090,8 @@ class HotelTierBased(APIView):
             if hotel_serializer.is_valid():
                 hotel_serializer.save()
                 return Response({
-                    "success":0,
-                    "message":hotel_serializer.data
+                    "success":1,
+                    "message":"Successfully Updated"
                 })
             return Response({
                 "success":0,
