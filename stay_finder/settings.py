@@ -8,11 +8,8 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.59.193',
-                 '192.168.1.90']
-
-
-# Application definition
+ALLOWED_HOSTS = ['192.168.59.193','192.168.243.193',
+                 '192.168.1.90','192.168.42.193']
 
 INSTALLED_APPS = [
     'django.contrib.admin',

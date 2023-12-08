@@ -228,6 +228,7 @@ class RentalRoom(APIView):
             }
             mapping['accommodation']['vendor'] = request.user
             mapping['room']['accommodation'] = mapping['accommodation']
+            print(mapping)
             rent = Rent(
                 accommodation= mapping['accommodation'],
                 room_serializer=mapping['room'],
@@ -960,7 +961,7 @@ class HotelNonTierBased(APIView):
                     'room[0][seater_beds]',
                     'room[0][per_day_rent]',
                     'room[0][fan_availability]',
-                     'room[0][kettle_availability]',
+                    'room[0][kettle_availability]',
                     'room[0][coffee_powder_availability]',
                     'room[0][milk_powder_availability]',
                     'room[0][tea_powder_availability]',
@@ -1291,7 +1292,6 @@ class HotelTierBased(APIView):
                 "success":0,
                 "message":"Please check your data before sending :)"
             })
-        success
 class HotelTierBasedRoom(APIView):
     authentication_classes = [SessionAuthentication,TokenAuthentication]
     permission_classes = [IsAuthenticated]
