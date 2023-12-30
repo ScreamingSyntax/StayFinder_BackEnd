@@ -29,7 +29,7 @@ class Accommodation(models.Model):
     weekly_non_veg_meals = models.IntegerField(null=True)
     weekly_laundry_cycles = models.IntegerField(null=True)  
     admission_rate = models.IntegerField(null=True)
-    
+    is_rejected = models.BooleanField(default=False)
     def __str__(self):
         return f"{self.pk} {self.name} {self.vendor.full_name} {self.type}"
 
@@ -51,7 +51,7 @@ class Room(models.Model):
     ac_availability = models.BooleanField(null=True)
     water_bottle_availability = models.BooleanField(null=True)
     steam_iron_availability = models.BooleanField(null=True)
-    per_day_rent = models.DecimalField(decimal_places=2,max_digits=6,null=True)
+    per_day_rent = models.IntegerField(null=True)
     fan_availability = models.BooleanField()
     bed_availability = models.BooleanField(null=True)
     sofa_availability = models.BooleanField(null=True)

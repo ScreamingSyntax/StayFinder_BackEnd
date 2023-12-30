@@ -11,6 +11,120 @@ Rent = namedtuple('Rent',('accommodation','room_serializer','room_image_serializ
 Hostel = namedtuple('Hotel',('accommodation','room'))
 from collections import OrderedDict
 
+
+class RentalRoomImage(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def patch(self,request):
+         if request.user.is_authenticated:
+            try:
+                if 'room_id' not in request.data:
+                    return Response({
+                        "success":0,
+                        "message":"You need to provide the room you want to update"
+                    })
+                if 'room_image_id' not in request.data:
+                    return Response({
+                        "success":0,
+                        "message":"You need to provide the room image id you want to update"
+                    })
+                if 'image' not in request.data:
+                     return Response({
+                        "success":0,
+                        "message":"You need to provide the image you want to update"
+                    })
+                room = Room.objects.get(id=request.data['room_id'])
+                roomImage = RoomImages.objects.get(id=request.data['room_image_id']);
+                roomImage.images = request.data['image'];
+                roomImage.save()
+                if  room.accommodation.vendor.email != request.user.email:
+                    return Response({
+                        "success":0,
+                        "message":"The rental room doesn't belong to you"
+                    })
+                if roomImage.room != room:
+                    return Response({
+                        "success":0,
+                        "message":"The image doesn't belong to the room"
+                    })
+                
+                if room.accommodation.type != 'rent_room':
+                    return Response({
+                        "success":0,
+                        "message":"The accommodation isn't a rental room"
+                    })
+                
+                return Response({
+                    "success":1,
+                    "message":"Coming soon"
+                })
+            except Room.DoesNotExist:
+                return Response({
+                    "success":0,
+                    "message":"The room doesn't exist"
+                })
+            except RoomImages.DoesNotExist:
+                return Response({
+                    "success":0,
+                    "message":"The room doesn't exist"
+                })
+            except:
+                return Response({
+                    "success":0,
+                    "message":"Something wen't wrong"
+                })
+
+class RentalRoomRoomUpdate(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def patch(self,request):
+         if request.user.is_authenticated:
+            try:
+                if 'room_id' not in request.data:
+                    return Response({
+                        "success":0,
+                        "message":"You need to provide the room you want to update"
+                    })
+                room = Room.objects.get(id=request.data['room_id'])
+                # roomImage.save()
+                if  room.accommodation.vendor.email != request.user.email:
+                    return Response({
+                        "success":0,
+                        "message":"The rental room doesn't belong to you"
+                    })
+                
+                if room.accommodation.type != 'rent_room':
+                    return Response({
+                        "success":0,
+                        "message":"The accommodation isn't a rental room"
+                    })
+                roomSerializer = RoomSerializer(room,data=request.data,partial=True)
+                # room.save()
+                if roomSerializer.is_valid():
+                    roomSerializer.save()
+                    return Response({
+                        "success":1,
+                        "message":"Successfully Updated"
+                    })
+                return Response({
+                    "success":0,
+                    "message":"Server Error"
+                })
+            except Room.DoesNotExist:
+                return Response({
+                    "success":0,
+                    "message":"The room doesn't exist"
+                })
+            except RoomImages.DoesNotExist:
+                return Response({
+                    "success":0,
+                    "message":"The room doesn't exist"
+                })
+            except:
+                return Response({
+                    "success":0,
+                    "message":"Something wen't wrong"
+                })
 class RentalRoom(APIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -64,9 +178,6 @@ class RentalRoom(APIView):
                     })
                 mapping={
                     "accommodation":{},
-                    "room":{},
-                    "room_image":[]
-
                 }
                 accommodation_fields = ["id","name", "city", "address", "longitude", "latitude", "type",
                             "number_of_washroom", "trash_dispose_availability",
@@ -74,46 +185,24 @@ class RentalRoom(APIView):
                 for field in accommodation_fields:
                     if f"accommodation[{field}]" in request.data:
                         mapping['accommodation'][field] = request.data.get(f'accommodation[{field}]')
-                room_fields = ["fan_availability", "bed_availability", "sofa_availability", "mat_availability",
-                   "carpet_availability", "washroom_status", "dustbin_availability"]
-                for field in room_fields:
-                    if f"room[{field}]" in request.data:
-                        mapping['room'][field] = request.data.get(f'room[{field}]')
-                # room_serializer = RoomSerializer.
                 if(mapping['accommodation'] != {}):
                     accommodation_serializer = AccommodationSerializer(accommodation,data = mapping['accommodation'],partial=True)
                     if accommodation_serializer.is_valid():
                         accommodation_serializer.save()
+                        return Response({
+                            "success":1,
+                            "message":"Successfully Updated"
+                        })
                     else:
                         return Response({
                             "success":0,
                             "message":accommodation_serializer.errors
                         })
-                room = Room.objects.get(accommodation=accommodation)
-                if(mapping['room']!={}):
-                    room_serializer = RoomSerializer(room,data=mapping["room"],partial=True)
-                    if room_serializer.is_valid():
-                        room_serializer.save()
-                    else:
-                        return Response({
-                            "success":0,
-                            "message":room_serializer.errors
-                        })
-                roomImages = RoomImages.objects.filter(room=room)
-                room_id = []
-                for roomImage in roomImages:
-                    room_id.append(roomImage.pk)
-                for room in room_id:
-                    print(f'room_image[{room}]')
-                    if f'room_image[{room}]' in request.data:
-                        room_image =RoomImages.objects.get(id=room)
-                        room_image.images =  request.data.get(f'room_image[{room}]')
-                        room_image.save()
 
-                return Response({
-                    "success":0,
-                    "message":"Under Construction"
-                })
+                # return Response({
+                #     "success":0,
+                #     "message":"Under Construction"
+                # })
             except Accommodation.DoesNotExist:
                 return Response({
                     "success":0,
@@ -133,11 +222,11 @@ class RentalRoom(APIView):
                     })
                 room_data= Room.objects.get(accommodation=accommodation)
                 room_images_data = RoomImages.objects.filter(room = room_data)
-                accommodation_serializer = AccommodationSerializer(accommodation)
-                room_serializer = RoomSerializer(room_data)
+                accommodation_serializer = AccommodationAllSerializer(accommodation)
+                room_serializer = RoomAllSerializer(room_data)
                 room_image_serializer = RoomAllImageSerailizer(room_images_data,many=True)
                 return Response({
-                    "success":0,
+                    "success":1,
                     "data":{
                         "accommodation":accommodation_serializer.data,
                         "room":room_serializer.data,
@@ -252,11 +341,10 @@ class RentalRoom(APIView):
 class AccommodationView(APIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
-
+    # def patch()
     def delete(self,request):
         if request.user.is_authenticated:
             try:
-                # accommodation = Accommodation.objects
                 if 'accommodation_id' not in request.data:
                     return Response({
                         "success":0,
@@ -289,7 +377,7 @@ class AccommodationView(APIView):
             try:
                 accommodation = Accommodation.objects.filter(vendor=request.user)
                 print(accommodation)
-                accommodation_serializer = AccommodationSerializer(accommodation,many=True)
+                accommodation_serializer = AccommodationAllSerializer(accommodation,many=True)
                 return Response({
                     "success":1,
                     "data":accommodation_serializer.data
@@ -329,9 +417,117 @@ class VerifyAccommodation(APIView):
                     "message":"The accommodation doesn't exist"
                 })
 
+class HostelImageRooms(APIView):
+    authentication_classes = [SessionAuthentication,TokenAuthentication]
+    permission_classes = [IsAuthenticated]  
+    def patch(self,request):
+        if request.user.is_authenticated:
+            try:
+                print(request.data)
+                if 'room_id' not in request.data:
+                    return Response({
+                        "success":0,
+                        "message":"You need to provide the room you want to update"
+                    })
+                if 'room_image_id' not in request.data:
+                    return Response({
+                        "success":0,
+                        "message":"You need to provide the room image id you want to update"
+                    })
+                if 'image' not in request.data:
+                     return Response({
+                        "success":0,
+                        "message":"You need to provide the image you want to update"
+                    })
+                room = Room.objects.get(id=request.data['room_id'])
+                roomImage = RoomImages.objects.get(id=request.data['room_image_id']);
+                roomImage.images = request.data['image'];
+                roomImage.save()
+                if  room.accommodation.vendor.email != request.user.email:
+                    return Response({
+                        "success":0,
+                        "message":"The rental room doesn't belong to you"
+                    })
+                if roomImage.room != room:
+                    return Response({
+                        "success":0,
+                        "message":"The image doesn't belong to the room"
+                    })
+                
+                if room.accommodation.type != 'hostel':
+                    return Response({
+                        "success":0,
+                        "message":"The accommodation isn't a hostel room"
+                    })
+                
+                return Response({
+                    "success":1,
+                    "message":"Successfully Done"
+                })
+            except Room.DoesNotExist:
+                return Response({
+                    "success":0,
+                    "message":"The room doesn't exist"
+                })
+            except RoomImages.DoesNotExist:
+                return Response({
+                    "success":0,
+                    "message":"The room doesn't exist"
+                })
+            except:
+                return Response({
+                    "success":0,
+                    "message":"Something wen't wrong"
+                })
 class HostelRooms(APIView):
     authentication_classes = [SessionAuthentication,TokenAuthentication]
     permission_classes = [IsAuthenticated]  
+    def get(self,request):
+        if request.user.is_authenticated:
+            try:
+                if 'id' not in request.data:
+                        return Response({
+                            "success":0,
+                            "message":"You should provide room id"
+                        })
+                print(request.data['id'])
+                accommodation = Accommodation.objects.get(id=request.data['id'])
+                if accommodation.vendor.email != request.user.email:
+                    return Response({
+                        "success":0,
+                        "message":"The room doesn't belong to you"
+                    })
+                if accommodation.type != "hostel":
+                    return Response({
+                        "success":0,
+                        "message":"The accomodation isn't a hostel"
+                    })
+                room = Room.objects.filter(accommodation=accommodation)
+                room_serializer = RoomAllSerializer(room,many=True)
+                room_id = []
+                for room in room:
+                    room_id.append(room.pk)
+                room_image = RoomImages.objects.filter(room__in=room_id)
+                room_image_serializer = RoomAllImageSerailizer(
+                    room_image,many=True
+                )
+                return Response({
+                        "success":1,
+                        "data":{
+                        "rooms":room_serializer.data,
+                        "room_image":room_image_serializer.data
+                        }
+                    })
+            except Accommodation.DoesNotExist:
+                return Response({
+                    "success":0,
+                    "message":"The accommodation doesn't exist"
+                })
+            except Room.DoesNotExist:
+                return Response({
+                    "success":0,
+                    "message":"Room doesn't exist"
+                })
     # def get(self)
     def delete(self,request):
         if request.user.is_authenticated:
@@ -383,39 +579,23 @@ class HostelRooms(APIView):
                     })
                 mapping = {
                     'room':{},
-                    'room_image':[]
+                  
                 }
-                room_images = RoomImages.objects.filter(room=room)
-                room_images_list = []
-                for room_image in room_images:
-                    room_images_list.append(room_image)
-                
-                room_images_list.sort(key=lambda room_image:room_image.pk)
-                print(f'This is room image list {room_images_list}')
-                room_fields =  ['fan_availability', 'bed_availability', 'sofa_availability', 'mat_availability', 'carpet_availability', 'washroom_status', 'dustbin_availability',"monthly_rate","seater_beds"]
-                room_image_fields = ['image_1','image_2']
+          
+                room_fields =  ['fan_availability', 'monthly_rate','washroom_status',"seater_beds"]
+               
                 for field in request.data:
                     if field in room_fields:
                         mapping["room"][field] = request.data.get(field)
-                    if field in room_image_fields:
-                        if 'image_1' == field:
-                            mapping['room_image'].append({'room':room.pk,'images':request.data.get(field),'id':room_images_list[0]})
-                        if 'image_2' == field:
-                            mapping['room_image'].append({'room':room.pk,'images':request.data.get(field),'id':room_images_list[1]})
+                   
                 mapping['room']['accommodation'] = room.accommodation.pk
                 mapping["room"]['id'] = room.pk
                 room_serializer = RoomAllSerializer(instance=room,data= mapping['room'],partial=True)
-                for room_image in mapping["room_image"]:
-                    print(room_image)
-                    room_image_serializer = RoomAllImageSerailizer(instance=room_image['id'],data={'images':room_image['images']},partial=True)
-                    if room_image_serializer.is_valid():
-                        room_image_serializer.save()
-                       
                 if room_serializer.is_valid():
                     room_serializer.save()
                     return Response({
-                        'success':0,
-                        "message":"a"
+                        'success':1,
+                        "message":"Successfully Done :)"
                     })
                 else:
                     return Response({
@@ -431,11 +611,6 @@ class HostelRooms(APIView):
                     "success":0,
                     "message":"Room doesn't exit"
                 })
-            # except:
-            #     return Response({
-            #         "success":0,
-            #         "message":""
-            #     })
     def post(self,request):
         if request.user.is_authenticated:
             try:
@@ -477,12 +652,13 @@ class HostelRooms(APIView):
                 if room.is_valid():
                     room.save()
                     return Response({
-                        "success":0,
+                        "success":1,
                         "message":"Successfully added"
                     })
+                # print(serializers.err)
                 return Response({
                     "success":0,
-                    "message":"Something went wrong"
+                    "message":"Something wen't wrong"
                 })
             except Accommodation.DoesNotExist:
                 return Response({
@@ -554,7 +730,7 @@ class HostelAccommodation(APIView):
                 room_image = RoomImages.objects.filter(room__in=room_id)
                 room_image_serializer = RoomAllImageSerailizer(room_image,many=True)
                 return Response({
-                    "success":0,
+                    "success":1,
                     "data":{
                         'accommodation':accommodation_serializer.data,
                         'room':room_serializer.data,
@@ -571,7 +747,8 @@ class HostelAccommodation(APIView):
                     "success":0,
                     "message":"Something went wrong"
                 })
-    
+  
+            
     def post(self,request):
         try:
             
@@ -752,6 +929,7 @@ class HotelNonTierBasedRoom(APIView):
     def patch(self,request):
         if request.user.is_authenticated:
             try:
+                print(request.data)
                 if 'room_id' not in request.data:
                         return Response({
                             "success":0,
@@ -784,7 +962,9 @@ class HotelNonTierBasedRoom(APIView):
                             'tea_powder_availability',
                             'hair_dryer_availability',
                             'tv_availability',
-                            'images'
+                            'images',
+                            'steam_iron_availability',
+                            'water_bottle_availability'
                     ]
                 updated_fields ={
                     'room':{},
@@ -804,6 +984,7 @@ class HotelNonTierBasedRoom(APIView):
                 print(image.pk)
                 room_serializer = RoomAllSerializer(room,data=updated_fields["room"],partial=True)
                 room_image_serializer = RoomAllImageSerailizer(image,data=updated_fields["image"],partial=True)
+                print(request.data)
                 if room_image_serializer.is_valid() and room_serializer.is_valid():
                     room_image_serializer.save()
                     room_serializer.save()
@@ -811,6 +992,9 @@ class HotelNonTierBasedRoom(APIView):
                         "success":1,
                         "message":"Success"
                     })
+                print(room_image_serializer.errors);
+                print(room_serializer.errors);
+
                 return Response({
                     "success":0,
                     "message":"Something went wrong"
@@ -861,7 +1045,9 @@ class HotelNonTierBasedRoom(APIView):
                         'tea_powder_availability',
                         'hair_dryer_availability',
                         'tv_availability',
-                        'images'
+                        'images',
+                        'steam_iron_availability',
+                        'water_bottle_availability'
                 ]
                 mapping = {
                     "room":{},
@@ -940,7 +1126,7 @@ class HotelNonTierBased(APIView):
                 image_serialized = RoomAllImageSerailizer(image,many=True).data
                 
                 return Response({
-                    "success":0,
+                    "success":1,
                     "data":{
                         "accommodation":accommodation_serialized,
                         "room":room_serialized,
@@ -952,6 +1138,53 @@ class HotelNonTierBased(APIView):
                 "success":0,
                 "message":"The accommodation doesn't exist"
             })
+    def patch(self,request):
+        try:
+            if request.user.is_authenticated:
+                if 'id' not in request.data:
+                    return Response({
+                        "success":0,
+                        "message": "Please provide id in request"
+                    })
+                accommodation = Accommodation.objects.get(id=request.data['id'])
+                if accommodation.vendor.email != request.user.email:
+                    return Response({
+                        "success":0,
+                        "message":"The acccommodation doesn't belong to you"
+                    })
+
+                # print(accommodation.has_tier);
+                if accommodation.has_tier == True:
+                    return Response({
+                        "success":0,
+                        "message":"The accommodation isn't a non-tier based"
+                    })
+                
+                hotel_serializer_accommodation = HotelAccommodationSerializer(accommodation,data=request.data,partial=True)
+                if hotel_serializer_accommodation.is_valid():
+                    hotel_serializer_accommodation.save()
+                    print(f"This is serializer {hotel_serializer_accommodation.data}")
+                    return Response({
+                        "success":1,
+                        "message":"Successfully updated accommodation"
+                    })
+                
+                else:
+                    return Response({
+                        "success":0,
+                        "message":hotel_serializer_accommodation.errors
+                    })
+        except Accommodation.DoesNotExist:
+            return Response({
+                "success":0,
+                "message":"The accommodation doesn't exist"
+            })
+        except Exception:
+            return Response({
+                "success":0,
+                "message":"Something Wrong"
+            })
+       
     def post(self,request):
         try:
             if request.user.is_authenticated:
@@ -1031,6 +1264,7 @@ class HotelNonTierBased(APIView):
                         "success":0,
                         "message":"The number of images doesn't match the room count"
                     })
+                print(mapping);
                 serializer = AddNonTierHotelSerializer(data=mapping)
                 if serializer.is_valid():
                     serializer.save()
@@ -1038,6 +1272,7 @@ class HotelNonTierBased(APIView):
                         "success":1,
                         "message":"Successfully added"
                     })
+                print(serializer.errors);
             return Response({
                 "success":0,
                 "message":"Please recheck your values"
@@ -1052,54 +1287,162 @@ class HotelNonTierBased(APIView):
                 "success":0,
                 "message":"Something went wrong"
             })
+class HotelTierBasedAccommodation(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def post(self,request):
+        # Add Tier
+        try:
+            if request.user.is_authenticated:
+                print(request.data)
+                if 'accommodation' not in request.data:
+                    return Response({
+                        "success":0,
+                        "message": "Please provide id in request"
+                    })
+                accommodation = Accommodation.objects.get(id=request.data['accommodation'])
+                if accommodation.vendor.email != request.user.email:
+                    return Response({
+                        "success":0,
+                        "message":"The acccommodation doesn't belong to you"
+                    })
+                if accommodation.has_tier == False:
+                    return Response({
+                        "success":0,
+                        "message":"The accommodation isn't a tier based"
+                    })
+                hotel_tier_serializer= HotelTierSerializer(
+                    data=request.data
+                )
+                if hotel_tier_serializer.is_valid():
+                    hotel_tier_serializer.save()
+                    return Response({
+                        "success":1,
+                        "message":"Successfully Added"
+                    })
+                return Response({
+                    "success":0,
+                    "message":hotel_tier_serializer.errors
+                })
+                # hotel_serializer_accommodation = HotelAccommodationSerializer(accommodation,data=request.data,partial=True)
+                # if hotel_serializer_accommodation.is_valid():
+                #     hotel_serializer_accommodation.save()
+                #     print(f"This is serializer {hotel_serializer_accommodation.data}")
+                #     return Response({
+                #         "success":1,
+                #         "message":"Successfully updated accommodation"
+                #     })
+                # if 
+                # else:
+                #     return Response({
+                #         "success":0,
+                #         "message":hotel_serializer_accommodation.errors
+                #     })
+        except Accommodation.DoesNotExist:
+            return Response({
+                "success":0,
+                "message":"The accommodation doesn't exist"
+            })
+        except Exception:
+            return Response({
+                "success":0,
+                "message":"Something Wrong"
+            })
+    def patch(self,request):
+        try:
+            if request.user.is_authenticated:
+                if 'id' not in request.data:
+                    return Response({
+                        "success":0,
+                        "message": "Please provide id in request"
+                    })
+                accommodation = Accommodation.objects.get(id=request.data['id'])
+                if accommodation.vendor.email != request.user.email:
+                    return Response({
+                        "success":0,
+                        "message":"The acccommodation doesn't belong to you"
+                    })
+                if accommodation.has_tier == False:
+                    return Response({
+                        "success":0,
+                        "message":"The accommodation isn't a tier based"
+                    })
+                hotel_serializer_accommodation = HotelAccommodationSerializer(accommodation,data=request.data,partial=True)
+                if hotel_serializer_accommodation.is_valid():
+                    hotel_serializer_accommodation.save()
+                    print(f"This is serializer {hotel_serializer_accommodation.data}")
+                    return Response({
+                        "success":1,
+                        "message":"Successfully updated accommodation"
+                    })
+                
+                else:
+                    return Response({
+                        "success":0,
+                        "message":hotel_serializer_accommodation.errors
+                    })
+        except Accommodation.DoesNotExist:
+            return Response({
+                "success":0,
+                "message":"The accommodation doesn't exist"
+            })
+        except Exception:
+            return Response({
+                "success":0,
+                "message":"Something Wrong"
+            })
+       
 class HotelTierBased(APIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
     def patch(self,request):
         if request.user.is_authenticated:
-            # try:
-            valid_fields = ['tier_name',
-                    'description',
-                    'image',]
-            hotel_tier = HotelTiers.objects.get(id=request.data['hoteltier_id'])
-            if hotel_tier.accommodation.vendor.email != request.user.email:
-                return Response({
-                    "success": 0,
-                    "message": "This accommodation doesn't belong to you"
-                })
-            if not hotel_tier.accommodation.has_tier:
-                return Response({
-                    "success": 0,
-                    "message": "The accommodation doesn't have a tier"
-                })
-            if hotel_tier.accommodation.type!="hotel":
-               return Response({
-                   "success":0,
-                   "message":"The accommodation isn't a hostel"
+            try:
+                valid_fields = ['tier_name',
+                        'description',
+                        'image',]
+                hotel_tier = HotelTiers.objects.get(id=request.data['hoteltier_id'])
+                if hotel_tier.accommodation.vendor.email != request.user.email:
+                    return Response({
+                        "success": 0,
+                        "message": "This accommodation doesn't belong to you"
                     })
-            to_update ={}
-            for field in valid_fields:
-                if field in request.data:
-                    data = request.data[field]
-                    if data == None or data == "":
-                        return Response({
-                            "success":0,
-                            "message":f"The {data} cannot be empty or null"
+                if not hotel_tier.accommodation.has_tier:
+                    return Response({
+                        "success": 0,
+                        "message": "The accommodation doesn't have a tier"
+                    })
+                if hotel_tier.accommodation.type!="hotel":
+                   return Response({
+                       "success":0,
+                       "message":"The accommodation isn't a hostel"
                         })
-                    to_update[field] = data
-            hotel_serializer = AllHotelTierSerializer(instance=hotel_tier,data=to_update,partial=True)
-            if hotel_serializer.is_valid():
-                hotel_serializer.save()
+                to_update ={}
+                for field in valid_fields:
+                    if field in request.data:
+                        data = request.data[field]
+                        if data == None or data == "":
+                            return Response({
+                                "success":0,
+                                "message":f"The {data} cannot be empty or null"
+                            })
+                        to_update[field] = data
+                hotel_serializer = AllHotelTierSerializer(instance=hotel_tier,data=to_update,partial=True)
+                if hotel_serializer.is_valid():
+                    hotel_serializer.save()
+                    return Response({
+                        "success":1,
+                        "message":"Successfully Updated"
+                    })
                 return Response({
-                    "success":1,
-                    "message":"Successfully Updated"
+                    "success":0,
+                    "message":hotel_serializer.errors
+                })        
+            except HotelTiers.DoesNotExist:
+                return Response({
+                    "success":0,
+                    "message":"The hotel tier doesn't exist"
                 })
-            return Response({
-                "success":0,
-                "message":hotel_serializer.errors
-            })        
-
-            # except:
     def delete(self,request):
         if request.user.is_authenticated:
             try:
@@ -1161,7 +1504,7 @@ class HotelTierBased(APIView):
                  room = Room.objects.filter(hotel_tier__in=tier).prefetch_related('hotel_tier')
                  room_serializer = RoomAllSerializer(room, many=True)
                  return Response({
-                     "success": 0,
+                     "success": 1,
                      "data": {
                          "accommodation": accommodation_serialized,
                          "tier": tier_serialized,
@@ -1275,7 +1618,7 @@ class HotelTierBased(APIView):
                 if hotel_serializer.is_valid():
                     hotel_serializer.save()
                     return Response({
-                        "success":0,
+                        "success":1,
                         "message":hotel_serializer.data
                     })
                 return Response({
@@ -1429,6 +1772,7 @@ class HotelTierBasedRoom(APIView):
     def patch(self,request):
         if request.user.is_authenticated:
             try:
+                print(request.data)
                 if 'room_id' not in request.data:
                     return Response({
                         "success":0,
@@ -1543,7 +1887,7 @@ class HotelAccommodation(APIView):
                     'type':request.data.get('type'),
                     'vendor':request.user
                 }
-                accommodation_serializer = AccommodationSerializer(data=mapping)
+                accommodation_serializer = AccommodationAllSerializer(data=mapping)
                 if accommodation_serializer.is_valid():
                     accommodation_serializer.save()
                     return Response({
