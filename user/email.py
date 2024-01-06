@@ -13,4 +13,5 @@ def send_otp_email(email, otp):
     message = f'Your OTP is: {otp}'
     from_email = settings.EMAIL_HOST_USER
     recipient_list = [email]
+    
     send_mail(subject, message, from_email, recipient_list)

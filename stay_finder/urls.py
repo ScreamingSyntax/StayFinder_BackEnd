@@ -4,6 +4,7 @@ from vendor import urls as vendor_urls
 from django.conf import settings
 from django.conf.urls.static import static
 from tier import urls as tier_urls
+from customer import urls as customer_urls
 from accomodation import urls as accomodation_urls
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -11,5 +12,6 @@ urlpatterns = [
     path('tier/',include(tier_urls),
          ),
     path("accommodation/", include(accomodation_urls), name=""),
+    path("customer/",include(customer_urls))
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

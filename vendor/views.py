@@ -11,6 +11,7 @@ from user.email import generate_otp,send_otp_email
 from django.utils import timezone
 from django.db import models
 from tier.models import TierTransaction,Tier
+from user.models import BaseUser
 from dateutil.relativedelta import relativedelta 
 
 class LoginView(APIView):
@@ -102,7 +103,7 @@ class SignUpView(APIView):
                 otp_exists = False
                 if 'otp' in request.data:
                     otp_exists = True
-                vendor = VendorUser.objects.get(email = email)
+                vendor = BaseUser.objects.get(email = email)
                 if(vendor.is_accepted == True):
                     return Response({
                         "success":0,
