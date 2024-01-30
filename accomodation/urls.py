@@ -6,6 +6,8 @@ urlpatterns = [
     path('rental_room/room/',RentalRoomRoomUpdate.as_view()),
     path('hostel/room/image/',HostelImageRooms.as_view()),
     path('',AccommodationView.as_view()),
+    path('display/',ShowAccommodations.as_view()),
+    path('display/accommodation/',ShowParticularAccommodation.as_view()),
     path('verify/',VerifyAccommodation.as_view()),
     path('hostel/',HostelAccommodation.as_view()),
     path('hostel/room/',HostelRooms.as_view()),

@@ -7,6 +7,7 @@ hotel_accommodation_fields = ["name","city","address","longitude","latitude","sw
 room_image_fields = ['images']
 accommodation_hostel_fields = ['name','city','address','longitude','latitude','type','number_of_washroom','parking_availability','image','meals_per_day','weekly_non_veg_meals','weekly_laundry_cycles','admission_rate']
 hotel_tiers = ["accommodation","tier_name","description","image"]
+
 class RoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
@@ -198,3 +199,14 @@ class AddNonTierHotelRoomSerializer(serializers.Serializer):
             'room':room,
             'images':image
         }
+
+class FetchTierWithRooms(serializers.ModelSerializer):
+    rooms = RoomAllSerializer(source='room_set',many=True)
+    class Meta:
+        model = HotelTiers
+        fields = ["id","accommodation","tier_name","description","image",'rooms']
+class FetchRoomsWithImages(serializers.ModelSerializer):
+    room_images = RoomAllImageSerailizer(source='roomimages_set', many=True)
+    class Meta:
+        model = Room
+        fields = ["id","accommodation",'seater_beds', 'hotel_tier', 'ac_availability', 'water_bottle_availability', 'steam_iron_availability', 'per_day_rent', 'fan_availability', 'bed_availability', 'sofa_availability', 'monthly_rate', 'mat_availability', 'carpet_availability', 'washroom_status', 'dustbin_availability', 'kettle_availability', 'coffee_powder_availability', 'milk_powder_availability', 'tea_powder_availability', 'hair_dryer_availability', 'tv_availability', 'room_images']

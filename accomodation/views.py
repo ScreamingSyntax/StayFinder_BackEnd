@@ -337,11 +337,62 @@ class RentalRoom(APIView):
                     "message": "Validation errors occurred"
                 })
 
-
+class ShowAccommodations(APIView):
+    def get(self,request):
+        try:
+            accommodation = Accommodation.objects.all()
+            accommodation_serializer = AccommodationAllSerializer(accommodation,many=True)
+            return Response({
+                "success":1,
+                "data":accommodation_serializer.data
+            })
+        except Accommodation.DoesNotExist:
+            return Response({
+                "success":0,
+                "message":"Accommodation Doesn't exist"
+            })
+class ShowParticularAccommodation(APIView):
+    def get(self,request):
+        try:
+            param_value = request.query_params.get('id', None)
+            if param_value == None:
+                return Response({
+                    "success":0,
+                    "message":"Please provide product id"
+                })
+            accommodation = Accommodation.objects.get(id=param_value)
+            print(accommodation.type)
+            print(accommodation.has_tier)
+            accommodation_serializer = AccommodationAllSerializer(accommodation,many=False)
+            if(accommodation.type in ["hotel","rent_room","hostel"] and accommodation.has_tier in [None,False]):
+                room = Room.objects.filter(accommodation=accommodation)
+                room_serializer = FetchRoomsWithImages(room,many=True)
+                return Response({
+                    "success":1,
+                    "data":{
+                        "accommodation":accommodation_serializer.data,
+                        "rooms":room_serializer.data
+                    }
+                })
+            if(accommodation.type =="hotel" and accommodation.has_tier == True):
+                hotel_tier = HotelTiers.objects.filter(accommodation=accommodation)
+                hotel_tier_serializer = FetchTierWithRooms(hotel_tier,many=True)
+                return Response({
+                    "success":1,
+                    "data":{
+                        "accommodation":accommodation_serializer.data,
+                        "tier":hotel_tier_serializer.data
+                    }
+                })
+            
+        except Accommodation.DoesNotExist:
+            return Response({
+                "success":0,
+                "message":"Accommodation Doesn't exist"
+            })
 class AccommodationView(APIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
-    # def patch()
     def delete(self,request):
         if request.user.is_authenticated:
             try:
@@ -1840,6 +1891,8 @@ class HotelTierBasedRoom(APIView):
                     "success":0,
                     "message":"Something went wrong"
                 })
+
+
 
 class HotelAccommodation(APIView):
     authentication_classes = [SessionAuthentication,TokenAuthentication]
