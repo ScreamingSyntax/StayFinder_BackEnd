@@ -17,4 +17,6 @@ urlpatterns = [
     path('hotel/nonTier/',HotelNonTierBased.as_view()),
     path('hotel/nonTier/room/',HotelNonTierBasedRoom.as_view()),
     path('hotel/tier/room/',HotelTierBasedRoom.as_view()),
+    path('search/',SearchAccommodation.as_view()),
+
 ]

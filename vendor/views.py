@@ -171,7 +171,17 @@ class VendorAcceptData(APIView):
     permission_classes = [IsAuthenticated]
     def post(self,request):
         if (request.user.is_authenticated):
-            vendor_user = VendorUser.objects.get(email = request.user.email)
+            if 'id' not in request.data:
+                return Response({
+                    "success":0,
+                    "message":"Please add user id to verify"
+                })
+            if request.data['id'] == "" or request.data['id'] is str:
+                return Response({
+                    "success":0,
+                    "message":"Please enter valid id"
+                })
+            vendor_user = VendorUser.objects.get(id = request.data['id'])
             if(vendor_user.vendor_profile.is_verified):
                 return Response({
                     "success":0,

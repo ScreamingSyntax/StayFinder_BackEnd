@@ -10,7 +10,7 @@ import json
 Rent = namedtuple('Rent',('accommodation','room_serializer','room_image_serializer'))
 Hostel = namedtuple('Hotel',('accommodation','room'))
 from collections import OrderedDict
-
+from django.db.models import Q
 
 class RentalRoomImage(APIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
@@ -450,13 +450,14 @@ class VerifyAccommodation(APIView):
                         "message":"You need to provide accommodation id"
                     })
                 accommodation = Accommodation.objects.get(id = request.data["accommodation"])
-                # print(accommodation.is_verified)
+                print(accommodation.is_verified)
                 if accommodation.is_verified:
                     return Response({
                         "success":0,
                         "message":"The accommodation is already verified"
                     })
                 accommodation.is_verified=True
+                accommodation.is_pending=False
                 accommodation.save()
                 return Response({
                     "success":0,
@@ -1015,7 +1016,8 @@ class HotelNonTierBasedRoom(APIView):
                             'tv_availability',
                             'images',
                             'steam_iron_availability',
-                            'water_bottle_availability'
+                            'water_bottle_availability',
+                            'room_count'
                     ]
                 updated_fields ={
                     'room':{},
@@ -1858,6 +1860,7 @@ class HotelTierBasedRoom(APIView):
                             'tea_powder_availability',
                             'hair_dryer_availability',
                             'tv_availability',
+                            'room_count'
                             ]
                 patch_fields = {}
                 for field in valid_fields:
@@ -1957,4 +1960,111 @@ class HotelAccommodation(APIView):
                     "success":0,
                     "message":"Hey there, looks like you are providing invalid fields"
                 })
-    
+
+
+class SearchAccommodation(APIView):
+    def post(self,request):
+            try:
+                fields = ['search_value','type','starting_price','ending_price']
+                if 'search_value' not in request.data:
+                    return Response({
+                        "success":0,
+                        "message":"Provide search value"
+                    })    
+                search_value = request.data['search_value']            
+                if search_value == "":
+                    return Response({
+                        "success":0,
+                        "message":"Search value cannot be null"
+                    })
+                if 'type' not in request.data and 'starting_rate' not in request.data:
+                    search_data = Accommodation.objects.filter(name__contains=search_value)
+                    fetch_accommodation = AccommodationAllSerializer(search_data,many=True)
+                    return Response({
+                        "success":1,
+                        "data":fetch_accommodation.data
+                    }) 
+                if 'type' in request.data and 'starting_rate'  not in request.data:
+                    types = ['hotel','hostel','rent_room']
+                    if request.data['type'] not in types:
+                        return Response({
+                            "success":0,
+                            "message":"Please add a valid type"
+                        })
+                    search_data = Accommodation.objects.filter(type = request.data['type']).filter(name__contains=search_value)
+                    fetch_accommodation = AccommodationAllSerializer(search_data,many=True)
+                    return Response({
+                        "success":1,
+                        "data":fetch_accommodation.data
+                    })  
+                if 'starting_rate' in request.data:
+                    
+                    if 'ending_rate' not in request.data:
+                        return Response({
+                            "success":0,
+                            "message":"Please add ending_rate"
+                        })
+                    fields = ['starting_rate','ending_rate']
+                    for field in fields:
+                        print(request.data[field])
+                        if request.data[field] == "" :
+                            return Response({
+                                "success":0,
+                                "message":f"The {field} is invalid"
+                            })
+                        starting_rate = int(request.data['starting_rate'])
+                        ending_rate = int(request.data['ending_rate'])
+
+                        if starting_rate > ending_rate:
+                            return Response({
+                                "success":0,
+                                "message":"The starting rate cannot be greater than ending rate"
+                            })
+                        accommodation_type = request.data['type']
+                        if accommodation_type == "rent_room":
+                            search_value = Accommodation.objects.filter(
+                                        type=accommodation_type, 
+                                        monthly_rate__range=(starting_rate, ending_rate)
+                                        )
+                            searializer = AccommodationAllSerializer(search_value,many=True)
+                            return Response({
+                                "success":1,
+                                "data":searializer.data
+                            })
+                        
+                        if accommodation_type == "hostel":
+                            accommodations = Accommodation.objects.filter(
+                                type=accommodation_type,
+                                room__monthly_rate__gte=starting_rate,
+                                room__monthly_rate__lte=ending_rate
+                            ).distinct()
+                            searializer = AccommodationAllSerializer(accommodations,many=True)
+                            return Response({
+                                "success":1,
+                                "data":searializer.data
+                            })
+                        
+                        if accommodation_type == "hotel":
+                            accommodations = Accommodation.objects.filter(
+                                type=accommodation_type,
+                                room__per_day_rent__gte=starting_rate,
+                                room__per_day_rent__lte=ending_rate
+                            ).distinct()
+                            searializer = AccommodationAllSerializer(accommodations,many=True)
+                            return Response({
+                                "success":1,
+                                "data":searializer.data
+                            })
+                    return Response({
+                                "success":0,
+                                "message":f"Wait wait"
+                            })
+
+                # for field in fields:
+                    
+            except Exception as e:
+                print(e)
+                return Response({
+                    "success":0,
+                    "message":"Something wen't wrong"
+                })

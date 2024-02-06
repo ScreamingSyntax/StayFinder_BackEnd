@@ -25,6 +25,7 @@ class VendorUser(BaseUser):
     date_verified = models.DateTimeField(null=True)
     def __str__(self):
         return self.email
+    
 class VendorProfile(models.Model):
     is_under_verification_process = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
@@ -38,4 +39,4 @@ class VendorProfile(models.Model):
     address = models.CharField(max_length=50,null=True,blank=True)
 
     def __str__(self):
-        return self.vendor.email
+        return self.vendor.email + f"{self.vendor.id}"

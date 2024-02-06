@@ -14,7 +14,7 @@ class Accommodation(models.Model):
     longitude= models.CharField(max_length=100)
     latitude =models.CharField(max_length=100)
     type = models.CharField(max_length=20,choices=ACCOMMODATION_TYPES)
-    monthly_rate= models.CharField(max_length=20,null=True)
+    monthly_rate= models.IntegerField(null=True)
     number_of_washroom = models.IntegerField(null=True)
     trash_dispose_availability = models.BooleanField(null=True)
     parking_availability = models.BooleanField(null=True)
@@ -66,6 +66,7 @@ class Room(models.Model):
     tea_powder_availability  = models.BooleanField(null=True)
     hair_dryer_availability = models.BooleanField(null=True)
     tv_availability = models.BooleanField(null=True)
+    room_count = models.IntegerField(default=0)
      
     def __str__(self):
         return f"{self.pk} {self.accommodation.name} {self.accommodation.vendor.full_name}"

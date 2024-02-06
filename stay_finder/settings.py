@@ -25,8 +25,8 @@ INSTALLED_APPS = [
     'tier',
     'user',
     'vendor',
-    'customer'
-    # 'payment'
+    'customer',
+    'booking'
 ]
 
 MIDDLEWARE = [

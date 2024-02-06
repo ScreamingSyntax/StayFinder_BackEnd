@@ -209,4 +209,4 @@ class FetchRoomsWithImages(serializers.ModelSerializer):
     room_images = RoomAllImageSerailizer(source='roomimages_set', many=True)
     class Meta:
         model = Room
-        fields = ["id","accommodation",'seater_beds', 'hotel_tier', 'ac_availability', 'water_bottle_availability', 'steam_iron_availability', 'per_day_rent', 'fan_availability', 'bed_availability', 'sofa_availability', 'monthly_rate', 'mat_availability', 'carpet_availability', 'washroom_status', 'dustbin_availability', 'kettle_availability', 'coffee_powder_availability', 'milk_powder_availability', 'tea_powder_availability', 'hair_dryer_availability', 'tv_availability', 'room_images']
+        fields = ["id","accommodation",'seater_beds', 'hotel_tier', 'ac_availability', 'water_bottle_availability', 'steam_iron_availability', 'per_day_rent', 'fan_availability', 'bed_availability', 'sofa_availability', 'monthly_rate', 'mat_availability', 'carpet_availability', 'washroom_status', 'dustbin_availability', 'kettle_availability', 'coffee_powder_availability', 'milk_powder_availability', 'tea_powder_availability', 'hair_dryer_availability', 'tv_availability', 'room_images',"room_count"]
