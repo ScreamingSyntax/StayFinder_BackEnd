@@ -19,4 +19,4 @@ class Booking(models.Model):
     booked_on = models.DateTimeField(auto_now_add=True)
     paid_amount = models.CharField(max_length=20)
     def __str__(self):
-        return f"{self.user.full_name} - {self.room.accommodation.name} - {self.check_in} to {self.check_out}"
+        return f"{self.id} {self.user.full_name} - {self.room.accommodation.name} - {self.check_in} to {self.check_out}"

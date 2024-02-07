@@ -26,7 +26,7 @@ class FetchBookingSerializer(serializers.ModelSerializer):
         fields = ['id', 'room', 'user', 'check_in', 'check_out', 'booked_on','paid_amount']
 
 class RoomWithAccommodationSerializer(serializers.ModelSerializer):
-    accommodation = AccommodationSerializer(read_only=True)
+    accommodation = AccommodationAllSerializer(read_only=True)
 
     class Meta:
         model = Room

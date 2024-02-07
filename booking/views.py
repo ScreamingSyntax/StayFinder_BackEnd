@@ -5,6 +5,91 @@ from rest_framework.authentication import SessionAuthentication,TokenAuthenticat
 from rest_framework.permissions import IsAuthenticated
 from accomodation.models import *
 from .serializers import *
+from datetime import datetime
+from dateutil.relativedelta import relativedelta 
+from accomodation.serializer import *
+class ViewParticularBookingDetails(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def get(self,request):
+        try:
+            param_value = request.query_params.get('id', None)
+            if param_value == None:
+                    return Response({
+                    "success":0,
+                    "message":"Please provide product id"
+                    })
+            booking = Booking.objects.get(id=param_value)
+            booking_serializer = FetchBookingSerializer(booking)
+            accommodation_type = booking.room.accommodation.type
+            if(accommodation_type == "hostel"):
+                accommodation_serializer = HostelAccommodationSerializer(  booking.room.accommodation)
+                room_serializer = RoomAllSerializer(booking.room)
+                room_image = RoomImages.objects.filter(room = booking.room)
+                room_image_serializer = RoomImageSerailizer(room_image,many=True)
+                return Response({
+                    "success":1,
+                    "data":{
+                        "accommodation":accommodation_serializer.data,
+                        "room":room_serializer.data,
+                        "images":room_image_serializer.data,
+                        "book":booking_serializer.data
+                    }
+                })
+            if(accommodation_type == "rent_room"):
+                accommodation_serializer = AccommodationAllSerializer(booking.room.accommodation)
+                room_serializer = RoomAllSerializer(booking.room)
+                room_image = RoomImages.objects.filter(room= booking.room)
+                room_image_serializer = RoomImageSerailizer(room_image,many=True)
+                return Response({
+                    "success":1,
+                    "data":{
+                        "accommodation":accommodation_serializer.data,
+                        "room":room_serializer.data,
+                        "images":room_image_serializer.data,
+                        "book":booking_serializer.data
+                    }
+                })
+            if(accommodation_type == "hotel"):
+                has_tier = booking.room.accommodation.has_tier
+                if has_tier == True:
+                    accommodation_serializer = AccommodationAllSerializer(booking.room.accommodation)
+                    room_serializer = RoomAllSerializer(booking.room)
+                    hotel_tier = HotelTierSerializer(booking.room.hotel_tier)
+                    return Response({
+                    "success":1,
+                    "data":{
+                        "accommodation":accommodation_serializer.data,
+                        "room":room_serializer.data,
+                        "tier":hotel_tier.data,
+                        "book":booking_serializer.data
+                    }
+                })
+                if has_tier == False:
+                    accommodation_serializer = AccommodationAllSerializer(booking.room.accommodation)
+                    room_serializer = RoomAllSerializer(booking.room)
+                    room_image = RoomImages.objects.filter(room= booking.room)
+                    room_image_serializer = RoomImageSerailizer(room_image,many=True)
+                    return Response({
+                        "success":1,
+                        "data":{
+                            "accommodation":accommodation_serializer.data,
+                            "room":room_serializer.data,
+                            "images":room_image_serializer.data,
+                            "book":booking_serializer.data
+                        }
+                    })
+        except Booking.DoesNotExist:
+            return Response({
+                "success":0,
+                "message":"Booking doesn't exist"
+            })
+        except Exception as e:
+            print(e)
+            return Response({
+                "success":0,
+                "message":"Something wen't wrong"
+            })
 
 class BookingRequestView(APIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
@@ -62,7 +147,7 @@ class VerifyBookingRequest(APIView):
             book.save()
             return Response({
                 "success":1,
-                "message":"Successfully Accepted Requests"
+                "message":"Successfully Responded To Requests"
             })
         except BookingRequest.DoesNotExist:
             return Response({"success":0,"message":"The request doesn't exist"})
@@ -79,14 +164,29 @@ class BookingView(APIView):
             requests = BookingRequest.objects.filter(room__accommodation__vendor=request.user)
             request_serializer = FetchBookingRequestSerializer(requests,many=True)
             booking =  Booking.objects.filter(room__accommodation__vendor=request.user)
-            booking_serializer = FetchBookingSerializer(booking,many=True)
-            return Response({"success":1,"data":{"requests":request_serializer.data,"booking":booking_serializer.data}})
+            current_date = datetime.now().date()
+            active_bookings = []
+            pasts_bookings = []
+            
+            print(booking)
+            for book in booking:
+                check_out_date = book.check_out
+                if current_date >= check_out_date:
+                    pasts_bookings.append(book)
+                if current_date < check_out_date:
+                    active_bookings.append(book) 
+            booking_serializer = FetchBookingSerializer(active_bookings,many=True)
+            past_booking_serializer = FetchBookingSerializer(pasts_bookings,many=True)
+            return Response({"success":1,"data":{"requests":request_serializer.data,"booking":booking_serializer.data,
+                                                 "past_bookings":past_booking_serializer.data
+                                                 }})
         if request.user.user_type == "customer":
             requests = BookingRequest.objects.filter(user=request.user)
             request_serializer = FetchBookingRequestSerializer(requests,many=True)
-            booking =  Booking.objects.filter(user=request.user)
+            booking =  Booking.objects.filter(user=request.user)        
             booking_serializer = FetchBookingSerializer(booking,many=True)
-            return Response({"success":1,"data":{"requests":request_serializer.data,"booking":booking_serializer.data}})
+            pasts_bookings_serializer  = FetchBookingRequestSerializer(pasts_bookings,many=True)
+            return Response({"success":1,"data":{"requests":request_serializer.data,"booking":booking_serializer.data,"pasts_booking":pasts_bookings_serializer.data}})
     def post(self, request):
         user = request.user
         room_id = request.data.get('room_id')

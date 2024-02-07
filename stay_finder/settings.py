@@ -8,8 +8,8 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.254.104','192.168.45.20','192.168.1.76',
-                 '192.168.1.90','192.168.45.22','192.168.52.193','192.168.147.193','192.168.45.210','10.42.0.1','192.168.44.68']
+ALLOWED_HOSTS = ['192.168.254.104','192.168.45.20','192.168.1.79',
+                 '192.168.1.90','192.168.45.22','192.168.52.193','192.168.147.193','192.168.45.210','10.42.0.1','192.168.44.68','127.0.0.1']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -18,7 +18,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'psycopg2',
+    'psycopg',
     'rest_framework',
     'rest_framework.authtoken',
     'accomodation',
@@ -94,26 +94,19 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'Asia/Kathmandu'
 
-USE_I18N = True
+# USE_I18N = True
 
-USE_TZ = True
+# USE_TZ = True
 
 STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# REST_FRAMEWORK = {
-#     'DEFAULT_AUTHENTICATION_CLASSES': (
-#         'vendor.authentication.VendorTokenAuthentication',
-#     ),
-# }
+
 AUTH_USER_MODEL="user.BaseUser"
 
 EMAIL_BACKEND = config('EMAIL_BACKEND')
