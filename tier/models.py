@@ -19,6 +19,7 @@ class TierTransaction(models.Model):
     paid_till = models.DateTimeField()
     transaction_id = models.TextField() 
     is_active = models.BooleanField()
+    
 
     def __str__(self):
         return f"{self.vendor.full_name} : {self.tier.name}"

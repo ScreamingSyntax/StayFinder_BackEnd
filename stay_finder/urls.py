@@ -7,6 +7,7 @@ from tier import urls as tier_urls
 from customer import urls as customer_urls
 from accomodation import urls as accomodation_urls
 from booking import urls as booking_urls
+from review import urls as review_urls
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('vendor/',include(vendor_urls)),
@@ -14,6 +15,7 @@ urlpatterns = [
          ),
     path("accommodation/", include(accomodation_urls), name=""),
     path("customer/",include(customer_urls)),
-    path("book/",include(booking_urls))
+    path("book/",include(booking_urls)),
+    path("review/",include(review_urls))
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -11,6 +11,12 @@ class BookingSerializer(serializers.ModelSerializer):
         booking = Booking.objects.create(**validated_data)
         return booking
 
+class WishListSerializer(serializers.ModelSerializer):
+    accommodation = AccommodationAllSerializer()
+    class Meta:
+        model = WhishList
+        fields = "__all__"
+
 class BookingRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = BookingRequest
@@ -30,7 +36,7 @@ class RoomWithAccommodationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Room
-        fields = ['id', 'seater_beds', 'per_day_rent', 'accommodation']
+        fields = ['id', 'seater_beds', 'per_day_rent', 'accommodation',"monthly_rate"]
 
 class FetchBookingSerializer(serializers.ModelSerializer):
     room = RoomWithAccommodationSerializer()

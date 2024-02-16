@@ -14,6 +14,75 @@ from tier.models import TierTransaction,Tier
 from user.models import BaseUser
 from dateutil.relativedelta import relativedelta 
 
+class ForgotPassword(APIView):
+    def post(self,request):
+        try:
+            print(request.data)
+            if 'email' not in request.data:
+                return Response({'success':0,'message':'You need to provide email'})
+            email = request.data['email']
+            user = VendorUser.objects.get(email= email)
+            if user.is_accepted == False:
+                return Response({'success':0,'message':'The user doesn\'t exist'})
+            if user.user_type == 'customer':
+                return Response({'success':0,'message':'This email belongs to a seller account'})
+            # user=request.user
+            if 'otp' not in request.data and 'new_pass' not in request.data:
+                otp_bro = generate_otp()
+                user.otp = otp_bro
+                user.save()
+                send_otp_email(email=user.email,otp=otp_bro)
+                return Response({'success':1,'message':'The otp has been sent'})
+            if 'otp' in request.data and 'new_pass' not in request.data:
+                otp = request.data['otp']
+                if otp == "" or otp == None:
+                    return Response({'success':0,'message':'Otp field cannot be empty'})
+                print(otp)
+                print(request.data)
+                if user.otp != otp:
+                    return Response({'success':0,'message':'The otp doesn\'t match'})
+                return Response({'success':1,'message':'Otp Verified'})
+            if 'otp' in request.data and 'new_pass' in request.data:
+                otp = request.data['otp']
+                new_pass = request.data['new_pass']
+                if otp == "" or otp == None:
+                    return Response({'success':0,'message':'Otp field cannot be empty'})
+                print(otp)
+                print(request.data)
+                if user.otp != otp:
+                    return Response({'success':0,'message':'The otp doesn\'t match'})
+                new_password = make_password(new_pass)
+                user.password = new_password
+                user.save()
+                return Response({'success':1,'message':'Successfully Changed Password'})
+        except VendorUser.DoesNotExist:
+            return Response({'success':0,'message':'Customer Doesn\'t exist '})
+        except Exception as e:
+            print(e)
+            return Response({'success':0,'message':'Something wen\'t wrong'})
+
+
+class ResetPassword(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def patch(self,request):
+        # if 'old_password' not in request.data:
+        fields = ['old_pass','new_pass']
+        for field in fields:
+            if field not in request.data:
+                return Response({'success':0,'message':f'Please provide {field} field'})
+            if request.data[field] == "" or request.data[field] == None:
+                return Response({'success':0,'message':f'The {field} cannot be null'})
+        user = VendorUser.objects.get(email=request.user.email)
+        # user.check_password
+        old_pass = request.data['old_pass']
+        if not user.check_password(old_pass):
+            return Response({"success":0,"message":"The old password doesn't match"})
+        
+        password = make_password(request.data['new_pass'])
+        user.password = password
+        user.save()
+        return Response({'success':1,'message':'Password reset successfull'})
 class LoginView(APIView):
     def post(self, request):
         try:

@@ -8,8 +8,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.254.104','192.168.45.20','192.168.1.79',
-                 '192.168.1.90','192.168.45.22','192.168.52.193','192.168.147.193','192.168.45.210','10.42.0.1','192.168.44.68','127.0.0.1']
+ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -24,9 +23,11 @@ INSTALLED_APPS = [
     'accomodation',
     'tier',
     'user',
+    'notification',
     'vendor',
     'customer',
-    'booking'
+    'booking',
+    'review'
 ]
 
 MIDDLEWARE = [
@@ -119,3 +120,5 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 MEDIA_ROOT = os.path.join(BASE_DIR,'assets/images/')
 MEDIA_URL='/images/'
+
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2**30 

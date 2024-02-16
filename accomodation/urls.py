@@ -2,6 +2,7 @@ from django.urls import path
 from accomodation.views import *
 urlpatterns = [
     path('rental_room/',RentalRoom.as_view()),
+    
     path('rental_room/image/',RentalRoomImage.as_view()),
     path('rental_room/room/',RentalRoomRoomUpdate.as_view()),
     path('hostel/room/image/',HostelImageRooms.as_view()),
@@ -18,5 +19,5 @@ urlpatterns = [
     path('hotel/nonTier/room/',HotelNonTierBasedRoom.as_view()),
     path('hotel/tier/room/',HotelTierBasedRoom.as_view()),
     path('search/',SearchAccommodation.as_view()),
-
+    path('reVerify/',VerificationResubmit.as_view()),
 ]

@@ -51,17 +51,19 @@ class RenewTier(APIView):
     def post(self,request):
         if request.user.is_authenticated:
             print(request.user)
+            # if 
             request.data['vendor']=request.user
             request.data['is_active']=True
             request.data['paid_date']=timezone.now()
-            request.data['paid_till']=timezone.now()+relativedelta(months=1)
-            requested_fileds  = ['tier','method_of_payment','transaction_id','paid_amount']
+            print(request.data)
+            requested_fileds  = ['tier','method_of_payment','transaction_id','paid_amount','paid_till']
             for data in requested_fileds:
                 if(data not in request.data):
                     return Response({
                         "success":0,
                         "message":f"Please provide {data} field"
                     })
+            print(request.data)
             try:
                 serializer = TransactionTierSerializer(data=request.data)
                 if(serializer.is_valid()):
@@ -75,9 +77,10 @@ class RenewTier(APIView):
                     TierTransaction.objects.filter(vendor=request.user).update(is_active=False)
                     serializer.save();
                     return Response({
-                        "success":1,
+                        "success":0,
                         "message":"Successfully renewed tier"
                     });
+
                 print(serializer.errors)
                 return Response({
                         "success":0,

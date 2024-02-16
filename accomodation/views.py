@@ -12,6 +12,44 @@ Hostel = namedtuple('Hotel',('accommodation','room'))
 from collections import OrderedDict
 from django.db.models import Q
 
+
+class VerificationResubmit(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def post(self,request):
+        if request.user.is_authenticated:
+            try:
+                fields = ['accommodation']
+                for field in fields:
+                    if field not in request.data:
+                        return Response({'success':0,'message':f'You need to provide {field}'})
+                    if request.data[field] == "" or request.data[field] == None:
+                        return Response({'success':0,'message':f'The field {field} cannpt be null or empty'})
+                    
+                accommodation = Accommodation.objects.get(id = request.data["accommodation"])
+                print(accommodation.is_verified)
+                if accommodation.is_verified:
+                    return Response({
+                        "success":0,
+                        "message":"The accommodation is already verified"
+                    })
+                if accommodation.is_pending:
+                    return Response({
+                        "success":0,
+                        "message":"The accommodation is in pending"
+                    })
+                accommodation.is_pending = True
+                accommodation.is_rejected = False
+                accommodation.save()
+                return Response({
+                    "success":1,
+                    "message":"Sucessfully Submitted Request"
+                })
+            except Accommodation.DoesNotExist:
+                return Response({
+                    "success":0,
+                    "message":"The accommodation doesn't exist"
+                })
 class RentalRoomImage(APIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -444,11 +482,21 @@ class VerifyAccommodation(APIView):
     def post(self,request):
         if request.user.is_authenticated:
             try:
-                if 'accommodation' not in request.data:
-                    return Response({
-                        "success":0,
-                        "message":"You need to provide accommodation id"
-                    })
+                fields = ['accommodation','verify']
+                for field in fields:
+                    if field not in request.data:
+                        return Response({'success':0,'message':f'You need to provide {field}'})
+                    if request.data[field] == "" or request.data[field] == None:
+                        return Response({'success':0,'message':f'The field {field} cannpt be null or empty'})
+                # if 'accommodation' not in request.data:
+                #     return Response({
+                #         "success":0,
+                #         "message":"You need to provide accommodation id"
+                #     })
+                # if 'verify' not in request.data:
+                    
+                verify = request.data['verify']
+                
                 accommodation = Accommodation.objects.get(id = request.data["accommodation"])
                 print(accommodation.is_verified)
                 if accommodation.is_verified:
@@ -456,8 +504,12 @@ class VerifyAccommodation(APIView):
                         "success":0,
                         "message":"The accommodation is already verified"
                     })
-                accommodation.is_verified=True
-                accommodation.is_pending=False
+                if verify == True:
+                    accommodation.is_verified=True
+                    accommodation.is_pending=False
+                if verify == False:
+                    accommodation.is_rejected=True
+                    accommodation.is_pending=False
                 accommodation.save()
                 return Response({
                     "success":0,
@@ -725,6 +777,57 @@ class HostelRooms(APIView):
 class HostelAccommodation(APIView):
     authentication_classes=[SessionAuthentication,TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    def patch(self, request):
+            if request.user.is_authenticated:
+                try:
+                    if 'id' not in request.data:
+                        return Response({
+                            "success": 0,
+                            "message": "Please provide the accommodation id"
+                        })
+
+                    accommodation = Accommodation.objects.get(id=request.data['id'])
+
+                    if accommodation.type != 'hostel':
+                        return Response({
+                            "success": 0,
+                            "message": "The accommodation isn't a hostel"
+                        })
+
+                    if accommodation.vendor.email != request.user.email:
+                        return Response({
+                            "success": 0,
+                            "message": "The accommodation doesn't belong to you"
+                        })
+
+                    # Assuming `AccommodationSerializer` exists and is appropriate for patching.
+                    serializer = AccommodationAllSerializer(accommodation, data=request.data, partial=True)
+                    if serializer.is_valid():
+                        serializer.save()
+                        return Response({
+                            "success": 1,
+                            "message": "Accommodation updated successfully",
+                        })
+                    return Response({
+                        "success": 0,
+                        "message": "Invalid data",
+                    })
+
+                except Accommodation.DoesNotExist:
+                    return Response({
+                        "success": 0,
+                        "message": "The accommodation doesn't exist"
+                    })
+                except ValidationError as e:
+                    return Response({
+                        "success": 0,
+                        "message": str(e)
+                    })
+                except Exception as e:
+                    return Response({
+                        "success": 0,
+                        "message": str(e)
+                    })
     def delete(self,request):
         if request.user.is_authenticated:
             try:
