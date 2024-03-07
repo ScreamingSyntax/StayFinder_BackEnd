@@ -20,20 +20,19 @@ class ItemView(APIView):
             if not request.user.is_authenticated:
                 return Response({'success': 0, 'message': 'Invalid Token'})
 
-            inventory = request.query_params.get('inventory')
-            if not inventory:
-                return Response({'success': 0, 'message': 'Please provide inventory id'})
-
+            accommodation = request.query_params.get('accommodation')
+            if not accommodation:
+                return Response({'success': 0, 'message': 'Please provide accommodation id'})
             filter_type = request.query_params.get('filter_type', None) 
             date_value = request.query_params.get('date_value', None)
+            print(filter_type)
             end_date_value = request.query_params.get('end_date_value', None) 
 
             if date_value:
                 date_value = datetime.strptime(date_value, '%Y-%m-%d').date()
             if end_date_value:
                 end_date_value = datetime.strptime(end_date_value, '%Y-%m-%d').date()
-
-            inventory_item = InventoryItem.objects.filter(inventory=inventory)
+            inventory_item = InventoryItem.objects.filter(inventory__accommodation__id = accommodation).exclude(is_deleted=True)
 
             inventory_logs_query = Q()
 
@@ -60,7 +59,7 @@ class ItemView(APIView):
                 if date_value and end_date_value:
                     inventory_logs_query &= Q(date_time__date__range=[date_value, end_date_value])
 
-            inventory_logs = InventoryLogs.objects.filter(item__inventory=inventory).filter(inventory_logs_query)
+            inventory_logs = InventoryLogs.objects.filter(item__inventory__accommodation__id=accommodation).filter(inventory_logs_query)
             ins = inventory_logs.filter(status='added').aggregate(total=Sum('count'))['total'] or 0
             outs = inventory_logs.filter(status='removed').aggregate(total=Sum('count'))['total'] or 0
             total = inventory_item.exclude(is_deleted=True).aggregate(total=Sum('count'))['total'] or 0
@@ -127,7 +126,6 @@ class ItemView(APIView):
         except InventoryItem.DoesNotExist:
             return Response({'message':'The item doesn\'t exist'})
         except Exception as e:
-            # print(f"The exception is {e}")
             print(e)
             return Response({'success':0,'message':'Something went wrong'})
     def post(self,request):
@@ -140,12 +138,22 @@ class ItemView(APIView):
                     return Response({'success':0,'message':f'The field {field} should be provided'})
                 if field == "" or field == None:
                     return Response({'success':0,'message':f'The field {field} cannot be null or empty'})
-            item_serializer = ItemSerailizer(data=request.data)
+            inventory = Inventory.objects.get(accommodation__id = request.data['inventory'])
+            data_dict = {
+                "name":request.data['name'],
+                "image":request.data['image'],
+                "count":request.data['count'],
+                "price":request.data['price'],
+                "inventory":inventory.id
+            }
+            item_serializer = ItemSerailizer(data=data_dict)
             if item_serializer.is_valid():
                 item = item_serializer.save()
                 InventoryLogs.objects.create(item=item,status = 'added',count = item_serializer.data['count']).save()
                 return Response({'success':1,'message':'Successfully added item'})
             return Response({'success':0,'message':'Error Saving data'})
+        except Inventory.DoesNotExist:
+            return Response({'success':0,'message':'Inventory doesn\'t exist'})
         except Exception as e:
             print(e)
             return Response({'success':0,'message':'Something wen\'t wrong'})

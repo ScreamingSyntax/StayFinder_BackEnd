@@ -13,7 +13,7 @@ from collections import OrderedDict
 from django.db.models import Q
 from notification.send_push import *
 from user.models import BaseUser
-
+from inventory.models import *
 class UpdateAccommodationLocationVIew(APIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -395,7 +395,8 @@ class RentalRoom(APIView):
             )
             serializer = RentRoomSerialzer(data={'accommodation': rent.accommodation, 'room_serializer': rent.room_serializer,'room_images_serializer':rent.room_image_serializer})
             if serializer.is_valid():
-                serializer.save()
+                accommodation = serializer.save()
+                Inventory.objects.create(accommodation = accommodation['accommodation']).save()
                 return Response({
                     "success": 1,
                     "message": "Successfully added"
@@ -1048,6 +1049,8 @@ class HostelAccommodation(APIView):
                 serializer = HostelSerializer(data={'accommodation':mapping['accommodation'],'room':mapping['room']})
                 if serializer.is_valid():
                     s = serializer.save()
+                    
+                    Inventory.objects.create(accommodation = s['accommodation']).save()
                     room_dataa = list(Accommodation.objects.get(id = s['accommodation']).room_set.all())
                     map = []
                     for i in range(len(room_image_data)):
@@ -2093,7 +2096,9 @@ class HotelAccommodation(APIView):
                 accommodation_serializer = AccommodationAllSerializer(data=mapping)
                 if accommodation_serializer.is_valid():
                     print("here")
-                    accommodation_serializer.save()
+                    accommodation = accommodation_serializer.save()
+                    Inventory.objects.create(accommodation = accommodation).save()
+
                     return Response({
                         "success":1,
                         "message": accommodation_serializer.data
