@@ -115,7 +115,7 @@ class RentRoomSerialzer(serializers.Serializer):
 #         }
 class HostelSerializer(serializers.Serializer):
     accommodation = AccommodationSerializer(many=False)
-    room = RoomSerializer(many=True)
+    room = RoomSerializer()
     def create(self,validated_data):
         accommodation_data = validated_data.pop('accommodation')
         accommodation = Accommodation.objects.create(**accommodation_data)

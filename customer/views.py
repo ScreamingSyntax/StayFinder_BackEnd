@@ -55,10 +55,11 @@ class ForgotPassword(APIView):
                 user.save()
                 return Response({'success':1,'message':'Successfully Changed Password'})
         except Customer.DoesNotExist:
-            return Response({'success':1,'message':'Customer Doesn\'t exist '})
+            return Response({'success':0,'message':'Customer Doesn\'t exist '})
         except Exception as e:
             print(e)
             return Response({'success':0,'message':'Something wen\'t wrong'})
+        
 class ResetPassword(APIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -103,7 +104,6 @@ class CustomerView(APIView):
             print(request.data)
             print(email)
             user = BaseUser.objects.get(email = email)
-           
             if(user.user_type == 'vendor'):
                 return Response({
                     "success":0,

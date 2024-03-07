@@ -8,9 +8,12 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["*",'192.168.1.79','192.168.248.16','192.168.137.209','192.168.41.208']
 
 INSTALLED_APPS = [
+    'daphne',
+    'channels',
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -22,6 +25,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'accomodation',
     'tier',
+    'inventory',
     'user',
     'notification',
     'vendor',
@@ -33,6 +37,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -41,6 +46,9 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'stay_finder.urls'
+
+CORS_ALLOW_ALL_ORIGINS = True
+
 
 TEMPLATES = [
     {
@@ -57,12 +65,17 @@ TEMPLATES = [
         },
     },
 ]
-
-WSGI_APPLICATION = 'stay_finder.wsgi.application'
-
-
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+import os
+# WSGI_APPLICATION = 'stay_finder.wsgi.application'
+ASGI_APPLICATION = 'stay_finder.asgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
+        },
+    },
+}
 
 
 DATABASES = {

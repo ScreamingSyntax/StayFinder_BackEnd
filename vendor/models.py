@@ -19,6 +19,5 @@ class VendorProfile(models.Model):
     is_rejected = models.BooleanField(default=False)
     rejected_message = models.CharField(max_length=50,null=True,blank=True)
     address = models.CharField(max_length=50,null=True,blank=True)
-
     def __str__(self):
         return self.vendor.email + f"{self.vendor.id}"

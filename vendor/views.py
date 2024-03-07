@@ -13,7 +13,7 @@ from django.db import models
 from tier.models import TierTransaction,Tier
 from user.models import BaseUser
 from dateutil.relativedelta import relativedelta 
-
+from notification.send_push import *
 class ForgotPassword(APIView):
     def post(self,request):
         try:
@@ -235,11 +235,22 @@ class GetVendorData(APIView):
                 "detail": "Invalid Token"
             })
 
+
+class ViewUnverifiedProfiles(APIView):
+    def get(self,request):
+        profiles = VendorProfile.objects.filter(is_verified = False).exclude(is_rejected=True)
+        serializer = VendorProfileSerializer(profiles,many=True)
+        return Response({
+            "success":1,
+            "data":serializer.data
+            })
+    
+    
 class VendorAcceptData(APIView):
-    authentication_classes = [SessionAuthentication,TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+    # authentication_classes = [SessionAuthentication,TokenAuthentication]
+    # permission_classes = [IsAuthenticated]
     def post(self,request):
-        if (request.user.is_authenticated):
+        # if (request.user.is_authenticated):
             if 'id' not in request.data:
                 return Response({
                     "success":0,
@@ -250,6 +261,7 @@ class VendorAcceptData(APIView):
                     "success":0,
                     "message":"Please enter valid id"
                 })
+            print(request.data)
             vendor_user = VendorUser.objects.get(id = request.data['id'])
             if(vendor_user.vendor_profile.is_verified):
                 return Response({
@@ -265,22 +277,27 @@ class VendorAcceptData(APIView):
             print(timezone.now())
             tier  = TierTransaction(tier=Tier.objects.filter(name="Free Tier").first(),vendor =vendor_user,paid_amount=0,paid_date = timezone.now(),paid_till=timezone.now()+relativedelta(months=1),is_active=True,transaction_id="Free",method_of_payment='Free');
             tier.save()
+            base = BaseUser.objects.filter(email=vendor_user.email)
+            send_push_notification(base,"Congratulations","Your profile has been accepted!")
             return Response({
                     "success":1,
                     "message":"The vendor is successfully verified"
                 })
-        return Response({
-                "success":0,
-                "message":"Something wen't wrong"
-        })
+        # return Response({
+        #         "success":0,
+        #         "message":"Something wen't wrong"
+        # })
 
 class VendorRejectData(APIView):
-    authentication_classes = [SessionAuthentication,TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+    # authentication_classes = [SessionAuthentication,TokenAuthentication]
+    # permission_classes = [IsAuthenticated]
     def post(self,request):
-        if (request.user.is_authenticated):
+        # if (request.user.is_authenticated):
+            print(request.data)
+            if('id' not in request.data):
+                return Response({'success':0,'message':'The vendor id should be provided'})
             if('rejected_message' in request.data):
-                vendor_user = VendorUser.objects.get(email = request.user.email)
+                vendor_user = VendorUser.objects.get(id = request.data['id'])
                 if(vendor_user.vendor_profile.is_rejected):
                     return Response({
                         "success":0,
@@ -292,10 +309,12 @@ class VendorRejectData(APIView):
                         "message":"Cannot reject a verified vendor"
                     })
                 vendor_user.vendor_profile.is_rejected = True
-                rejected = list(request.data.keys())[0]
-                vendor_user.vendor_profile.rejected_message=request.data[rejected]
+                
+                vendor_user.vendor_profile.rejected_message=request.data['rejected_message']
                 vendor_user.vendor_profile.is_under_verification_process = False
                 vendor_user.save()
+                base = BaseUser.objects.filter(email=vendor_user.email)
+                send_push_notification(base,"Rejected","Your profile has been rejected!")
                 return Response({
                         "success":1,
                         "message":"The vendor is successfully rejected"
@@ -305,10 +324,10 @@ class VendorRejectData(APIView):
                     "success":0,
                     "message":"Please provide a rejected message as well"
                 })
-        return Response({
-                "success":0,
-                "message":"Something wen't wrong"
-        })
+        # return Response({
+        #         "success":0,
+        #         "message":"Something wen't wrong"
+        # })
     
 class VendorVerificationData(APIView):
     authentication_classes = [SessionAuthentication,TokenAuthentication]

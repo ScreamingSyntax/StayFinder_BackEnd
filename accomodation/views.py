@@ -11,8 +11,40 @@ Rent = namedtuple('Rent',('accommodation','room_serializer','room_image_serializ
 Hostel = namedtuple('Hotel',('accommodation','room'))
 from collections import OrderedDict
 from django.db.models import Q
+from notification.send_push import *
+from user.models import BaseUser
 
-
+class UpdateAccommodationLocationVIew(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def patch(self,request):
+        if request.user.is_authenticated:
+            try:
+                print(request.data)
+                fields = ['id','longitude','latitude']
+                for field in fields:
+                    if field not in request.data:
+                        return Response({'success':0,'message':f'The field {field} cannot be empty.'})
+                    if request.data[field] == "" or request.data[field] == None:
+                        return Response({'success':0,'message':f'The field {field} cannot be null or empty'})
+                accommodation = Accommodation.objects.get(id = request.data['id'])
+                if accommodation.vendor.email != request.user.email:
+                    return Response({"success":0,"message":"The accommodation doesn't belong to you"})
+                data = {
+                    'longitude':request.data['longitude'],
+                    'latitude':request.data['latitude']                
+                                                    }
+                serializer = AccommodationSerializer(instance = accommodation,data= data,partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({'success':1,'message':'The location has been updated'})
+                print(serializer.errors)
+                return Response({'success':0,'message':serializer.errors})
+            except Accommodation.DoesNotExist:
+                return Response({"success":0,'message':"The requested accommodation doesn't exist"})
+            except:
+                return Response({'success':0,'message':'Something wen\'t wrong '})
+                
 class VerificationResubmit(APIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -494,7 +526,7 @@ class VerifyAccommodation(APIView):
                 #         "message":"You need to provide accommodation id"
                 #     })
                 # if 'verify' not in request.data:
-                    
+        
                 verify = request.data['verify']
                 
                 accommodation = Accommodation.objects.get(id = request.data["accommodation"])
@@ -504,15 +536,20 @@ class VerifyAccommodation(APIView):
                         "success":0,
                         "message":"The accommodation is already verified"
                     })
+                base_user = BaseUser.objects.filter(email=accommodation.vendor.email)
+
                 if verify == True:
                     accommodation.is_verified=True
                     accommodation.is_pending=False
+                    send_push_notification(base_user,"Verified","Your accommdation has been verified")
                 if verify == False:
                     accommodation.is_rejected=True
                     accommodation.is_pending=False
+                    send_push_notification(base_user,"Rejected","Your accommodation has been rejected")
                 accommodation.save()
+
                 return Response({
-                    "success":0,
+                    "success":1,
                     "message":"Sucessfully Verified"
                 })
             except Accommodation.DoesNotExist:
@@ -2004,6 +2041,7 @@ class HotelAccommodation(APIView):
     authentication_classes = [SessionAuthentication,TokenAuthentication]
     permission_classes = [IsAuthenticated]
     def post(self,request):
+        print(request.data)
         if request.user.is_authenticated:
             try:
                 required_fields = {
@@ -2021,16 +2059,23 @@ class HotelAccommodation(APIView):
                 }   
                 for field in required_fields:
                     if field not in request.data:
+                        
+                        print("herea")
+                        print(field)
                         return Response({
                             "success":0,
                             "message":f"{field} doesn't exist"
                         })
                     if field in request.data:
+
                         if request.data[field] == None or request.data[field] =="":
+                            print("here")
+                            print(field)
                             return Response({
                                 "success":0,
                                 "message":f"{field} cannot be null"
                             })
+                        print(request.data)
                 mapping = {
                     'name':request.data.get('name'),
                     'has_tier':request.data.get('has_tier'),
@@ -2039,7 +2084,6 @@ class HotelAccommodation(APIView):
                     'swimming_pool_availability':request.data.get('swimming_pool_availability'),
                     'latitude':request.data.get('latitude'),
                     'longitude':request.data.get('longitude'),
-                    'longitude':request.data.get('type'),
                     'address':request.data.get('address'),
                     'city':request.data.get('city'),
                     'image':request.data.get('image'),
@@ -2048,17 +2092,23 @@ class HotelAccommodation(APIView):
                 }
                 accommodation_serializer = AccommodationAllSerializer(data=mapping)
                 if accommodation_serializer.is_valid():
+                    print("here")
                     accommodation_serializer.save()
                     return Response({
                         "success":1,
                         "message": accommodation_serializer.data
                     })
                 else :
+                    print("Here")
+                    print(accommodation_serializer.errors)
                     return Response({
                         "success":0,
                         "message":accommodation_serializer.errors
                     })
-            except:
+            except Exception as e:
+                print("Here")
+
+                print(e)
                 return Response({
                     "success":0,
                     "message":"Hey there, looks like you are providing invalid fields"

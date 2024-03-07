@@ -31,6 +31,7 @@ class BaseUser(AbstractBaseUser, PermissionsMixin):
     USER_TYPES = (
         ('vendor', 'Vendor'),
         ('customer', 'Customer'),
+        ('admin', 'Admin'),
     )
     USERNAME_FIELD = 'email'
     otp = models.CharField(max_length=6,null=True);
