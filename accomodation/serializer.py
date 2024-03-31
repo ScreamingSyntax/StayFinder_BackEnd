@@ -2,7 +2,7 @@ from rest_framework import serializers
 from accomodation.models import *
 
 room_fields =  ['fan_availability', 'bed_availability', 'sofa_availability', 'mat_availability', 'carpet_availability', 'washroom_status', 'dustbin_availability',"monthly_rate","seater_beds",]
-accommodation_fields = ["name","city","address","image","longitude","latitude","type","monthly_rate","number_of_washroom","trash_dispose_availability","parking_availability","gym_availability","swimming_pool_availability","has_tier","is_verified","is_active","is_pending","vendor","admission_rate","weekly_laundry_cycles","weekly_non_veg_meals","meals_per_day","is_rejected"]
+accommodation_fields = ["id","name","city","address","image","longitude","latitude","type","monthly_rate","number_of_washroom","trash_dispose_availability","parking_availability","gym_availability","swimming_pool_availability","has_tier","is_verified","is_active","is_pending","vendor","admission_rate","weekly_laundry_cycles","weekly_non_veg_meals","meals_per_day","is_rejected"]
 hotel_accommodation_fields = ["name","city","address","longitude","latitude","swimming_pool_availability","gym_availability","image","parking_availability"]
 room_image_fields = ['images']
 accommodation_hostel_fields = ['name','city','address','longitude','latitude','type','number_of_washroom','parking_availability','image','meals_per_day','weekly_non_veg_meals','weekly_laundry_cycles','admission_rate']

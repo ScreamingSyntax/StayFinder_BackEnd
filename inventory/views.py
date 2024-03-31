@@ -11,7 +11,6 @@ from dateutil.relativedelta import relativedelta
 import math
 from django.db.models import Sum, Q
 
-# Create your views here.
 
 class ItemView(APIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
@@ -25,7 +24,9 @@ class ItemView(APIView):
                 return Response({'success': 0, 'message': 'Please provide accommodation id'})
             filter_type = request.query_params.get('filter_type', None) 
             date_value = request.query_params.get('date_value', None)
-            print(filter_type)
+            print(f"The filter type is {filter_type}")
+            print(f"The date type is {date_value}")
+
             end_date_value = request.query_params.get('end_date_value', None) 
 
             if date_value:
@@ -58,7 +59,7 @@ class ItemView(APIView):
             elif filter_type == 'range':
                 if date_value and end_date_value:
                     inventory_logs_query &= Q(date_time__date__range=[date_value, end_date_value])
-
+            print(inventory_logs_query)
             inventory_logs = InventoryLogs.objects.filter(item__inventory__accommodation__id=accommodation).filter(inventory_logs_query)
             ins = inventory_logs.filter(status='added').aggregate(total=Sum('count'))['total'] or 0
             outs = inventory_logs.filter(status='removed').aggregate(total=Sum('count'))['total'] or 0

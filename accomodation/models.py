@@ -30,6 +30,7 @@ class Accommodation(models.Model):
     weekly_laundry_cycles = models.IntegerField(null=True)  
     admission_rate = models.IntegerField(null=True)
     is_rejected = models.BooleanField(default=False)
+    # rejected_message = models.Te
     def __str__(self):
         return f"{self.pk} {self.name} {self.vendor.full_name} {self.type}"
 

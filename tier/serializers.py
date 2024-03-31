@@ -6,6 +6,11 @@ class TierSerializer(serializers.ModelSerializer):
         model = Tier
         fields = "__all__"
 
+class SelectedTierSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tier
+        fields = ["name","description","image","price","accomodationLimit"]
+
 class TransactionTierSerializer(serializers.ModelSerializer):
     class Meta:
         model = TierTransaction

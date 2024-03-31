@@ -14,6 +14,7 @@ from tier.models import TierTransaction,Tier
 from user.models import BaseUser
 from dateutil.relativedelta import relativedelta 
 from notification.send_push import *
+
 class ForgotPassword(APIView):
     def post(self,request):
         try:
@@ -26,7 +27,6 @@ class ForgotPassword(APIView):
                 return Response({'success':0,'message':'The user doesn\'t exist'})
             if user.user_type == 'customer':
                 return Response({'success':0,'message':'This email belongs to a seller account'})
-            # user=request.user
             if 'otp' not in request.data and 'new_pass' not in request.data:
                 otp_bro = generate_otp()
                 user.otp = otp_bro

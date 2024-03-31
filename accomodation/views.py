@@ -521,15 +521,13 @@ class VerifyAccommodation(APIView):
                         return Response({'success':0,'message':f'You need to provide {field}'})
                     if request.data[field] == "" or request.data[field] == None:
                         return Response({'success':0,'message':f'The field {field} cannpt be null or empty'})
-                # if 'accommodation' not in request.data:
-                #     return Response({
-                #         "success":0,
-                #         "message":"You need to provide accommodation id"
-                #     })
-                # if 'verify' not in request.data:
-        
                 verify = request.data['verify']
-                
+                # if verify == 'fa'
+                print(verify)
+                print(type(verify))
+                return Response({
+                    "message":"Aaaa"
+                })
                 accommodation = Accommodation.objects.get(id = request.data["accommodation"])
                 print(accommodation.is_verified)
                 if accommodation.is_verified:
@@ -987,37 +985,34 @@ class HostelAccommodation(APIView):
                                 "message":f"The field {field} cannot be null or empty"
                             })
                 mapping = {
-                     "accommodation": {
-                         "name": request.data.get('accommodation[name]'),
-                         "city": request.data.get('accommodation[city]'),
-                         "address": request.data.get('accommodation[address]'),
-                         "longitude": request.data.get('accommodation[longitude]'),
-                         "latitude": request.data.get('accommodation[latitude]'),
-                         "type": request.data.get('accommodation[type]'),
-                         "number_of_washroom": request.data.get('accommodation[number_of_washroom]'),
-                         "parking_availability": request.data.get('accommodation[parking_availability]'),
-                         "monthly_rate": request.data.get('accommodation[monthly_rate]'),
-                         "image":request.data.get('accommodation[image]'),
-                         "meals_per_day":request.data.get('accommodation[meals_per_day]'),
-                         "weekly_non_veg_meals":request.data.get('accommodation[weekly_non_veg_meals]'),
-                         "weekly_laundry_cycles":request.data.get('accommodation[weekly_laundry_cycles]'),
-                         "admission_rate":request.data.get('accommodation[admission_rate]'),
-                         "vendor":request.user.pk,
-                         "meals_per_day":request.data.get('accommodation[meals_per_day]'),
-                         "weekly_non_veg_meals":request.data.get('accommodation[weekly_non_veg_meals]'),
-                         "weekly_laundry_cycles":request.data.get('accommodation[weekly_laundry_cycles]'),
-                     },
-                     "room": [],
-                     "room_images":[]
+                        "accommodation": {
+                            "name": request.data.get('accommodation[name]'),
+                            "city": request.data.get('accommodation[city]'),
+                            "address": request.data.get('accommodation[address]'),
+                            "longitude": request.data.get('accommodation[longitude]'),
+                            "latitude": request.data.get('accommodation[latitude]'),
+                            "type": request.data.get('accommodation[type]'),
+                            "number_of_washroom": request.data.get('accommodation[number_of_washroom]'),
+                            "parking_availability": request.data.get('accommodation[parking_availability]'),
+                            "monthly_rate": request.data.get('accommodation[monthly_rate]'),
+                            "image":request.data.get('accommodation[image]'),
+                            "meals_per_day":request.data.get('accommodation[meals_per_day]'),
+                            "weekly_non_veg_meals":request.data.get('accommodation[weekly_non_veg_meals]'),
+                            "weekly_laundry_cycles":request.data.get('accommodation[weekly_laundry_cycles]'),
+                            "admission_rate":request.data.get('accommodation[admission_rate]'),
+                            "vendor":request.user.pk,
+                            "meals_per_day":request.data.get('accommodation[meals_per_day]'),
+                            "weekly_non_veg_meals":request.data.get('accommodation[weekly_non_veg_meals]'),
+                            "weekly_laundry_cycles":request.data.get('accommodation[weekly_laundry_cycles]'),
+                        },
+                        "room": [],
+                        "room_images":[]
                 }  
                 room_data = {}  
-
                 for key, value in request.POST.items():
                     if key.startswith("room["):
-
                         room_index = int(key.split("[")[1].split("]")[0])
                         field_name = key.split("][")[1].rstrip("]")
-
                         if room_index not in room_data:
                             room_data[room_index] = {}
                         room_data[room_index][field_name] = value
@@ -1235,7 +1230,7 @@ class HotelNonTierBasedRoom(APIView):
                         'seater_beds',
                         'per_day_rent',
                         'fan_availability',
-                         'kettle_availability',
+                        'kettle_availability',
                         'coffee_powder_availability',
                         'milk_powder_availability',
                         'tea_powder_availability',
@@ -1609,9 +1604,9 @@ class HotelTierBased(APIView):
                         "message": "The accommodation doesn't have a tier"
                     })
                 if hotel_tier.accommodation.type!="hotel":
-                   return Response({
-                       "success":0,
-                       "message":"The accommodation isn't a hostel"
+                    return Response({
+                        "success":0,
+                        "message":"The accommodation isn't a hostel"
                         })
                 to_update ={}
                 for field in valid_fields:
@@ -1654,10 +1649,10 @@ class HotelTierBased(APIView):
                         "message": "The accommodation doesn't have a tier"
                     })
                 if hotel_tier.accommodation.type!="hotel":
-                   return Response({
-                       "success":0,
-                       "message":"The accommodation isn't a hostel"
-                   })
+                    return Response({
+                        "success":0,
+                        "message":"The accommodation isn't a hostel"
+                    })
                 hotel_tier.delete()
                 return Response({
                     "success":1,
@@ -1675,48 +1670,48 @@ class HotelTierBased(APIView):
                 })
             
     def get(self, request):
-         try:
-             if request.user.is_authenticated:
-                 accommodation = Accommodation.objects.select_related('vendor').get(id=request.data['accommodation_id'])
-                 
-                 if accommodation.vendor.email != request.user.email:
-                     return Response({
-                         "success": 0,
-                         "message": "This accommodation doesn't belong to you"
-                     })
-                 if not accommodation.has_tier:
-                     return Response({
-                         "success": 0,
-                         "message": "The accommodation doesn't have a tier"
-                     })
-                 if accommodation.type!="hotel":
+            try:
+                if request.user.is_authenticated:
+                    accommodation = Accommodation.objects.select_related('vendor').get(id=request.data['accommodation_id'])
+                    
+                    if accommodation.vendor.email != request.user.email:
+                        return Response({
+                            "success": 0,
+                            "message": "This accommodation doesn't belong to you"
+                        })
+                    if not accommodation.has_tier:
+                        return Response({
+                            "success": 0,
+                            "message": "The accommodation doesn't have a tier"
+                        })
+                    if accommodation.type!="hotel":
+                        return Response({
+                            "success":0,
+                            "message":"The accommodation isn't a hostel"
+                        })
+                    tier = HotelTiers.objects.filter(accommodation=accommodation)
+                    accommodation_serialized = AllAccommodationSerializer(instance=accommodation).data
+                    tier_serialized = HotelTierSerializer(tier, many=True).data
+                    room = Room.objects.filter(hotel_tier__in=tier).prefetch_related('hotel_tier')
+                    room_serializer = RoomAllSerializer(room, many=True)
                     return Response({
-                        "success":0,
-                        "message":"The accommodation isn't a hostel"
+                        "success": 1,
+                        "data": {
+                            "accommodation": accommodation_serialized,
+                            "tier": tier_serialized,
+                            "room": room_serializer.data
+                        }
                     })
-                 tier = HotelTiers.objects.filter(accommodation=accommodation)
-                 accommodation_serialized = AllAccommodationSerializer(instance=accommodation).data
-                 tier_serialized = HotelTierSerializer(tier, many=True).data
-                 room = Room.objects.filter(hotel_tier__in=tier).prefetch_related('hotel_tier')
-                 room_serializer = RoomAllSerializer(room, many=True)
-                 return Response({
-                     "success": 1,
-                     "data": {
-                         "accommodation": accommodation_serialized,
-                         "tier": tier_serialized,
-                         "room": room_serializer.data
-                     }
-                 })
-         except Accommodation.DoesNotExist:
-             return Response({
-                 "success": 0,
-                 "message": "The accommodation doesn't exist"
-             })
-         except:
-             return Response({
-                 "success":0,
-                 "message": "Something wen't wrong"
-             })
+            except Accommodation.DoesNotExist:
+                return Response({
+                    "success": 0,
+                    "message": "The accommodation doesn't exist"
+                })
+            except:
+                return Response({
+                    "success":0,
+                    "message": "Something wen't wrong"
+                })
     def post(self,request):
         try:
             if request.user.is_authenticated:
@@ -2078,7 +2073,6 @@ class HotelAccommodation(APIView):
                                 "success":0,
                                 "message":f"{field} cannot be null"
                             })
-                        print(request.data)
                 mapping = {
                     'name':request.data.get('name'),
                     'has_tier':request.data.get('has_tier'),

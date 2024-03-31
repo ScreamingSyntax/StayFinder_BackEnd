@@ -6,5 +6,5 @@ urlpatterns = [
     path('currentTier/',GetCurrenTierInformation.as_view()),
     path('transactionHistory/',TransactionHistory.as_view()),
     path('renewTier/',RenewTier.as_view()),
-
+    path('admin/',TierView.as_view())
 ]

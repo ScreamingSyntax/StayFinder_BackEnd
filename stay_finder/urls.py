@@ -10,8 +10,13 @@ from booking import urls as booking_urls
 from review import urls as review_urls
 from inventory import urls as inventory_urls
 from notification import urls as notification_urls
+from user import urls as admin_urls
+from chat import urls as chat_urls
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('supahadmin/', admin.site.urls),
+    # path('unverifiedAccommodations/', admin.site.urls),
+    path('admin/',include(admin_urls)),
+
     path('vendor/',include(vendor_urls)),
     path('tier/',include(tier_urls)),
     path('inventory/',include(inventory_urls)),
@@ -20,5 +25,7 @@ urlpatterns = [
     path("book/",include(booking_urls)),
     path("review/",include(review_urls)),
     path("review/",include(review_urls)),
-    path("notification/",include(notification_urls))
+    path("notification/",include(notification_urls)),
+    path("chat/",include(chat_urls)),
+
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

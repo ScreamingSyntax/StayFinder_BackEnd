@@ -29,8 +29,6 @@ def send_push_notification(users, title, message):
         response = requests.post(url, headers=headers, json=payload)
         if response.status_code == 200:
             print("Notification sent")
-            # return JsonResponse({"message": "Notification sent successfully."}, status=200)
         else:
             print(response.json)
             print("Notification failed")
-            # return JsonResponse({"error": "Failed to send notification."}, status=response.status_code)

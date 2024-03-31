@@ -8,8 +8,9 @@ from user.email import generate_otp,send_otp_email
 from django.contrib.auth.hashers import make_password
 from rest_framework.authtoken.models import Token
 from rest_framework import status
-
 from .serializer import *
+from user.serializers import *
+
 
 
 
@@ -101,15 +102,16 @@ class CustomerView(APIView):
                 },
                 )
             email = request.data['email']
-            print(request.data)
-            print(email)
             user = BaseUser.objects.get(email = email)
             if(user.user_type == 'vendor'):
                 return Response({
                     "success":0,
                     "message":"The Email is used for seller account"
                 })
+            print("adada")
+
             customer = Customer.objects.get(email=email)
+            print("adada")
             if(customer.is_accepted == False):
                 return Response({
                     "success":0,
@@ -122,10 +124,16 @@ class CustomerView(APIView):
                 },
                 )
             token, created = Token.objects.get_or_create(user=customer)
-            serializer = CustomerSerializer(instance=customer)
+            print(customer)
+            print("adada")
+
+            serializer = CustomerSerializer(
+                instance=
+                customer)
             return Response({
                 "success": 1,
                 "token": token.key,
+                "user": BaseUserSerializer(user).data,
                 "data": serializer.data,
                 "message":"Successfully Logged In"
             })
@@ -147,6 +155,33 @@ class CustomerView(APIView):
                 "message":"Customer doesn't exist"
             },
             )
+    def patch(self,request):
+        try:
+            customer = Customer.objects.get(id=request.user.id)
+            # data = {
+            #     "full_name":request.data.get('full_name'),
+            #     "image":request.data.get('image')
+            # }
+            full_name = request.data.get('full_name')
+            image = request.data.get('image')
+            if not full_name:
+                return Response({
+                    "success":0,
+                    "message":"You need to provide name to update"
+                })
+            customer.full_name = full_name
+            if image:
+                customer.image = image
+            customer.save()
+            return Response({
+                "success":1,
+                "message":"Customer Details Updated"
+            })
+        except:
+            return Response({
+                "success":0,
+                "message":"Something wen't wrong"
+            })
     def post(self,request):
             # print()
             print(request.data)

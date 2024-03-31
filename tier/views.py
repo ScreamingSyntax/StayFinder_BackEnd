@@ -8,6 +8,70 @@ from tier.serializers import *
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta 
 from notification.send_push import *
+
+
+class TierView(APIView):
+    authentication_classes = [SessionAuthentication,TokenAuthentication]
+
+    def get(self,request):
+        tiers = list(Tier.objects.all())
+        tiers.sort(key= lambda x: x.pk)
+        serializer = TierSerializer(tiers,many=True)
+        return Response({
+                "success":1,
+                "data": serializer.data
+            })
+    def post(self,request):
+        details = ['name','description','image','price','accomodationLimit']
+        for detail in details:
+            if detail not in request.data:
+                return Response({
+                    "success":0,
+                    "message":f"The {detail} is not present"
+                })
+            data = request.data[detail]
+            if data == "":
+                return Response({
+                    "success":0,
+                    "message":f"The field {detail} is not present"
+                })
+        # print(request.data)
+        data = {
+            'name':request.data['name'],
+            'image':request.data['image'],
+            'description':request.data['description'],
+            'price':request.data['price'],
+            'accomodationLimit':request.data['accomodationLimit'],
+        }
+        print(data)
+        serializer = TierSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "success":1,
+                "message":"Successfully Saved Data"
+            })
+        print(serializer.errors)
+        return Response({
+            "success":0,
+            "message":"Error Saving data"
+        })
+    def patch(self,request):
+        id = request.data['id']
+        tier = Tier.objects.get(id=id)
+        all_data = request.data
+        serializer = TierSerializer(instance=tier,data=all_data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "success":1,
+                "message":"Successfully Updated"
+            })
+        return Response({
+            'success':0,
+            'message':"Error Saving data"
+        })
+    
 class GetTierInformation(APIView):
     authentication_classes = [SessionAuthentication,TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -20,6 +84,9 @@ class GetTierInformation(APIView):
                 "success":1,
                 "data": serializer.data
             })
+
+
+        
 
 class GetCurrenTierInformation(APIView):
     authentication_classes=[SessionAuthentication,TokenAuthentication]
